@@ -104,6 +104,19 @@ module cmd_cfg_tb();
     .cal_done     (cal_done),
     .motors_off   (motors_off)
   );
+  
+  /*------------------------------------------------------------------------------
+  --  Commands and responses.
+  ------------------------------------------------------------------------------*/
+  localparam CMD_SET_PTCH   = 8'h02; // 16'hpppp (signed  16bit)
+  localparam CMD_SET_ROLL   = 8'h03; // 16'hrrrr (signed  16bit)
+  localparam CMD_SET_YAW    = 8'h04; // 16'hyyyy (signed  16bit)
+  localparam CMD_SET_THRST  = 8'h05; // 16'h0ttt (unsigned 9bit)
+  localparam CMD_CALIBRATE  = 8'h06; // 16'hxxxx
+  localparam CMD_EMER_LAND  = 8'h07; // 16'h0000
+  localparam CMD_MTRS_OFF  = 8'h08; // 16'hxxxx
+
+  localparam RESP_POS_ACK   = 8'ha5;
 
   /*------------------------------------------------------------------------------
   --  Tasks for test fluency. (def. here to access signals within testbench)
@@ -120,7 +133,7 @@ module cmd_cfg_tb();
     join
   endtask
 
-  localparam DECODE_WAIT_TIMEOUT = 10000; // cycles
+  localparam DECODE_WAIT_TIMEOUT = 1000000; // cycles
   localparam CALIBRATE_TIMEOUT = 1000;
   task quad_decode_wait();
     fork
@@ -143,26 +156,65 @@ module cmd_cfg_tb();
     rmt_snd_cmd = 1;
     @(negedge clk)
     rmt_snd_cmd = 0;
+	
+	// Test if cmd is CALIBRATE
+	if (s_cmd == CMD_CALIBRATE) begin
+		// Wait for the cmd to be received
+		fork 
+			begin: CMD_RDY_TIMEOUT
+				repeat (1000000) @(posedge clk);
+				$display("[!] timeout waiting for calibrate cmd to be received");
+				$stop();
+			end
+			begin
+				@(posedge DUT.cmd_rdy) disable CMD_RDY_TIMEOUT;
+			end
+		join
+		fork
+			begin
+				// Wait half a clock before checking inertial_cal
+				@(negedge clk);
+				assert (inertial_cal === 1'b1)
+				else $fatal(1, "[!] inertial_cal is not high after sending calibrate cmd.");
+				
+				@(posedge DUT.tmr_full) disable CAL_TIMEOUT;
+				// Wait half a clock before checking strt_cal and inertial_cal
+				@(posedge clk);
+				assert (strt_cal === 1'b1)
+				else $fatal(1, "[!] strt_cal didn't go high after tmr_full came high.");
+				assert (inertial_cal === 1'b1)
+				else $fatal(1, "[!] inertial_cal is not high after tmr_full goes high.");
+				
+				// The next period after being high, strt_cal should be low
+				@(posedge clk);
+				assert (strt_cal === 1'b0)
+				else $fatal(1, "[!] strt_cal stayed high too long.");
+				assert (inertial_cal === 1'b1)
+				else $fatal(1, "[!] inertial_cal is not high after strt_cal goes low.");
+				
+				cal_done = 1'b1;
+				// Check that inertial_cal is low after cal_done goes high
+				@(negedge clk);
+				assert (inertial_cal === 1'b0)
+				else $fatal(1, "[!] inertial_cal is not low after cal_done goes high.");
+				// Set cal_done back to 0 for later tests
+				@(negedge clk);
+				cal_done = 1'b0;
+			end
+			begin: CAL_TIMEOUT
+				repeat(CALIBRATE_TIMEOUT) @(posedge clk);
+				$display("[!] timeout waiting for `tmr_full` after %d clk cycles", CALIBRATE_TIMEOUT);
+				$stop();
+			end
+		join
+	end
+	
   endtask
 
   task remote_assertresp(input logic [7:0] tru_resp);
     assert (rmt_resp === tru_resp)
     else $fatal(1, "[remote] expected resp %h !== %h", tru_resp, rmt_resp);
   endtask
-
-  /*------------------------------------------------------------------------------
-  --  Commands and responses.
-  ------------------------------------------------------------------------------*/
-  localparam CMD_SET_PTCH   = 8'h02; // 16'hpppp (signed  16bit)
-  localparam CMD_SET_ROLL   = 8'h03; // 16'hrrrr (signed  16bit)
-  localparam CMD_SET_YAW    = 8'h04; // 16'hyyyy (signed  16bit)
-  localparam CMD_SET_THRST  = 8'h05; // 16'h0ttt (unsigned 9bit)
-  localparam CMD_CALIBRATE  = 8'h06; // 16'hxxxx
-  localparam CMD_EMER_LAND  = 8'h07; // 16'h0000
-  localparam CMD_MTRS_OFF  = 8'h08; // 16'hxxxx
-
-  localparam RESP_POS_ACK   = 8'ha5;
-  
   
   initial begin
     // reset all devices
@@ -177,38 +229,6 @@ module cmd_cfg_tb();
 
 	// -- CALIBRATE
 	remote_send(CMD_CALIBRATE, 16'hxxxx);
-	@(posedge DUT.cmd_rdy);
-	@(posedge clk);
-	fork
-		begin
-			// Have to wait for cmd to go through before checking this
-			assert (inertial_cal === 1'b1)
-			else $fatal(1, "[!] inertial_cal is not high after sending calibrate cmd.");
-			
-			@(posedge DUT.tmr_full) disable CAL_TIMEOUT;
-			@(posedge clk);
-			assert (strt_cal === 1'b1)
-			else $fatal(1, "[!] strt_cal didn't go high after tmr_full came high.");
-			assert (inertial_cal === 1'b1)
-			else $fatal(1, "[!] inertial_cal is not high after tmr_full goes high.");
-			
-			@(posedge clk)
-			assert (strt_cal === 1'b0)
-			else $fatal(1, "[!] strt_cal stayed high too long.");
-			assert (inertial_cal === 1'b1)
-			else $fatal(1, "[!] inertial_cal is not high after strt_cal goes low.");
-			
-			cal_done = 1'b1;
-			@(negedge clk);
-			assert (inertial_cal === 1'b0)
-			else $fatal(1, "[!] inertial_cal is not low after cal_done goes high.");
-		end
-		begin: CAL_TIMEOUT
-			repeat(CALIBRATE_TIMEOUT) @(posedge clk);
-			$display("[!] timeout waiting for `tmr_full` after %d clk cycles", CALIBRATE_TIMEOUT);
-			$stop();
-		end
-	join
 	remote_resp_wait();
 	remote_assertresp(RESP_POS_ACK);
 	
@@ -217,7 +237,7 @@ module cmd_cfg_tb();
 
     // -- SET_PTCH
     remote_send(CMD_SET_PTCH, 16'h1337); // send set pitch from remote
-    // quad_decode_wait(); // wait for quad to process
+    quad_decode_wait(); // wait for quad to process
     remote_resp_wait(); // wait for ack
     remote_assertresp(RESP_POS_ACK);
     assert (d_ptch === 16'h1337) // check pitch
@@ -225,6 +245,7 @@ module cmd_cfg_tb();
 	
 	// -- SET_ROLL
 	remote_send(CMD_SET_ROLL, 16'hAAAA);
+	quad_decode_wait(); // wait for quad to process
 	remote_resp_wait();
 	remote_assertresp(RESP_POS_ACK);
 	assert (d_roll === 16'hAAAA)
@@ -232,6 +253,7 @@ module cmd_cfg_tb();
 	
 	// -- SET_YAW
 	remote_send(CMD_SET_YAW, 16'hAAAA);
+	quad_decode_wait(); // wait for quad to process
 	remote_resp_wait();
 	remote_assertresp(RESP_POS_ACK);
 	assert (d_yaw === 16'hAAAA)
@@ -239,6 +261,7 @@ module cmd_cfg_tb();
 	
 	// -- SET_THRST
 	remote_send(CMD_SET_THRST, 16'h0AAA);
+    quad_decode_wait(); // wait for quad to process
 	remote_resp_wait();
 	remote_assertresp(RESP_POS_ACK);
 	assert (thrst === 9'h0AA)
@@ -246,6 +269,7 @@ module cmd_cfg_tb();
 	
 	// -- EMER_LAND
 	remote_send(CMD_EMER_LAND, 16'h0000);
+    quad_decode_wait(); // wait for quad to process
 	remote_resp_wait();
 	remote_assertresp(RESP_POS_ACK);
 	assert (thrst === 9'h00 && d_ptch === 16'h0000 && d_roll === 16'h0000 && d_yaw === 16'h0000)
@@ -253,9 +277,28 @@ module cmd_cfg_tb();
 	
 	// -- MTRS_OFF
 	remote_send(CMD_MTRS_OFF, 16'hxxxx);
+    quad_decode_wait(); // wait for quad to process
 	remote_resp_wait();
 	remote_assertresp(RESP_POS_ACK);
 	assert (motors_off === 1'b1)
+	else $fatal(1, "[!] motors_off assert failed (is %h), should be %h", motors_off, 1'h1);
+	
+	// Send another cmd to pass time
+	// Check that motors_off is high after as well
+	remote_send(CMD_SET_ROLL, 16'hAAAA);
+    quad_decode_wait(); // wait for quad to process
+	remote_resp_wait();
+	remote_assertresp(RESP_POS_ACK);
+	assert (motors_off === 1'b1)
+	else $fatal(1, "[!] motors_off assert failed, should be high until calibrated");
+	
+	// Send a calibrate cmd
+	remote_send(CMD_CALIBRATE, 16'hxxxx);
+	remote_resp_wait();
+	remote_assertresp(RESP_POS_ACK);
+	
+	// Check that motors_off is low after calibrated
+	assert (motors_off === 1'b0)
 	else $fatal(1, "[!] motors_off assert failed (is %h), should be %h", motors_off, 1'h1);
 	
 	$display("Test passed!");
