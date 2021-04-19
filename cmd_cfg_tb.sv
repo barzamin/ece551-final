@@ -157,9 +157,7 @@ module cmd_cfg_tb();
     @(negedge clk)
     rmt_snd_cmd = 0;
 	
-	// Test if cmd is CALIBRATE
-	if (s_cmd == CMD_CALIBRATE) begin
-		// Wait for the cmd to be received
+	// Wait for the cmd to be received
 		fork 
 			begin: CMD_RDY_TIMEOUT
 				repeat (1000000) @(posedge clk);
@@ -170,6 +168,9 @@ module cmd_cfg_tb();
 				@(posedge DUT.cmd_rdy) disable CMD_RDY_TIMEOUT;
 			end
 		join
+		
+	// Test if cmd is CALIBRATE
+	if (s_cmd == CMD_CALIBRATE) begin
 		fork
 			begin
 				// Wait half a clock before checking inertial_cal
@@ -220,12 +221,6 @@ module cmd_cfg_tb();
     // reset all devices
     @(negedge clk) rst_n = 0;
     @(negedge clk) rst_n = 1;
-	
-/*	// Set all outputs at start
-	rmt_resp_rdy = 1'b0;
-	cal_done = 1'b0;
-	rmt_clr_resp_rdy = 1'b0;
-	*/
 
 	// -- CALIBRATE
 	remote_send(CMD_CALIBRATE, 16'hxxxx);
@@ -237,7 +232,6 @@ module cmd_cfg_tb();
 
     // -- SET_PTCH
     remote_send(CMD_SET_PTCH, 16'h1337); // send set pitch from remote
-    quad_decode_wait(); // wait for quad to process
     remote_resp_wait(); // wait for ack
     remote_assertresp(RESP_POS_ACK);
     assert (d_ptch === 16'h1337) // check pitch
@@ -245,7 +239,6 @@ module cmd_cfg_tb();
 	
 	// -- SET_ROLL
 	remote_send(CMD_SET_ROLL, 16'hAAAA);
-	quad_decode_wait(); // wait for quad to process
 	remote_resp_wait();
 	remote_assertresp(RESP_POS_ACK);
 	assert (d_roll === 16'hAAAA)
@@ -253,7 +246,6 @@ module cmd_cfg_tb();
 	
 	// -- SET_YAW
 	remote_send(CMD_SET_YAW, 16'hAAAA);
-	quad_decode_wait(); // wait for quad to process
 	remote_resp_wait();
 	remote_assertresp(RESP_POS_ACK);
 	assert (d_yaw === 16'hAAAA)
@@ -261,7 +253,6 @@ module cmd_cfg_tb();
 	
 	// -- SET_THRST
 	remote_send(CMD_SET_THRST, 16'h0AAA);
-    quad_decode_wait(); // wait for quad to process
 	remote_resp_wait();
 	remote_assertresp(RESP_POS_ACK);
 	assert (thrst === 9'h0AA)
@@ -269,7 +260,6 @@ module cmd_cfg_tb();
 	
 	// -- EMER_LAND
 	remote_send(CMD_EMER_LAND, 16'h0000);
-    quad_decode_wait(); // wait for quad to process
 	remote_resp_wait();
 	remote_assertresp(RESP_POS_ACK);
 	assert (thrst === 9'h00 && d_ptch === 16'h0000 && d_roll === 16'h0000 && d_yaw === 16'h0000)
@@ -277,7 +267,6 @@ module cmd_cfg_tb();
 	
 	// -- MTRS_OFF
 	remote_send(CMD_MTRS_OFF, 16'hxxxx);
-    quad_decode_wait(); // wait for quad to process
 	remote_resp_wait();
 	remote_assertresp(RESP_POS_ACK);
 	assert (motors_off === 1'b1)
@@ -286,7 +275,6 @@ module cmd_cfg_tb();
 	// Send another cmd to pass time
 	// Check that motors_off is high after as well
 	remote_send(CMD_SET_ROLL, 16'hAAAA);
-    quad_decode_wait(); // wait for quad to process
 	remote_resp_wait();
 	remote_assertresp(RESP_POS_ACK);
 	assert (motors_off === 1'b1)
