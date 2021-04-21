@@ -29,7 +29,7 @@ CycloneIV iQuad(.clk(clk),.RST_n(RST_n),.SS_n(SS_n),.SCLK(SCLK),.MISO(MISO),
 
 ////// Instantiate DUT ////////
 QuadCopter iDUT(.clk(clk),.RST_n(RST_n),.SS_n(SS_n),.SCLK(SCLK),.MOSI(MOSI),.MISO(MISO),
-                .INT(INT),.RX(RX),.TX(TX),.LED(LED),.FRNT(frnt_ESC),.BCK(back_ESC),
+                .INT(INT),.RX(RX),.TX(TX),.FRNT(frnt_ESC),.BCK(back_ESC),
                 .LFT(left_ESC),.RGHT(rght_ESC));
 
 
