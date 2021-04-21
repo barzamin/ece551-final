@@ -129,7 +129,7 @@ module QuadCopter(
   flght_cntrl ifly(
     .clk(clk),
     .rst_n(rst_n),
-
+	
     .vld(vld),
     .d_ptch(d_ptch),
     .d_roll(d_roll),

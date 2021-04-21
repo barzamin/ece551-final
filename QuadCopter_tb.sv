@@ -2,10 +2,10 @@
 module QuadCopter_tb();
 
 //// Interconnects to DUT/support defined as type wire /////
-wire SS_n,SCLK,MOSI,MISO,INT;
+wire SS_n, SCLK, MOSI, MISO, INT;
 wire RX,TX;
 wire [7:0] resp;                // response from DUT
-wire cmd_sent,resp_rdy;
+wire cmd_sent, resp_rdy;
 wire frnt_ESC, back_ESC, left_ESC, rght_ESC;
 
 ////// Stimulus is declared as type reg ///////
@@ -17,7 +17,14 @@ reg clr_resp_rdy;               // asserted to knock down resp_rdy
 
 wire [7:0] LED;
 
-//// Maybe define some localparams for command encoding ///
+//// localparams for command encoding ///
+localparam SET_PITCH 	= 8'h02;
+localparam SET_ROLL 	= 8'h03;
+localparam SET_YAW		= 8'h04;
+localparam SET_THRST	= 8'h05;
+localparam CALIBRATE	= 8'h06;
+localparam E_LAND		= 8'h07;
+localparam MOTORS_OFF	= 8'h08;
 
 ////////////////////////////////////////////////////////////////
 // Instantiate Physical Model of Copter with Inertial sensor //
@@ -39,10 +46,12 @@ RemoteComm iREMOTE(.clk(clk), .rst_n(RST_n), .RX(TX), .TX(RX),
                      .cmd_sent(cmd_sent), .resp_rdy(resp_rdy),
                      .resp(resp), .clr_resp_rdy(clr_resp_rdy));
 
+
 initial begin
- 
-  /// your intellectual property goes here ///
-  
+	clk = 1'b0;
+	RST_n = 1'b0;
+	repeat(5) @(negedge clk);
+	RST_n = 1'b1;
 end
 
 always
