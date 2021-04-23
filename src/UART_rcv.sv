@@ -99,7 +99,9 @@ module UART_rcv(clk, rst_n, RX, clr_rdy, rx_data, rdy);
 	
 	// Output logic and flop
 	always_ff @(posedge clk, negedge rst_n) begin
-		if (set_rdy)
+		if (!rst_n)
+			rdy <= 1'b0;
+		else if (set_rdy)
 			rdy <= 1'b1;
 		else if (init)
 			rdy <= 1'b0;

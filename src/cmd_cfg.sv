@@ -39,7 +39,9 @@ module cmd_cfg(clk, rst_n, cmd_rdy, cmd, data, clr_cmd_rdy, resp, send_resp, d_p
 
 	// Holding register for d_ptch
 	always_ff @(posedge clk, negedge rst_n) begin
-		if (!rst_n | emer_cntrl)
+		if (!rst_n)
+			d_ptch <= 16'h0000;
+		else if (emer_cntrl)
 			d_ptch <= 16'h0000;
 		else if (wptch)
 			d_ptch <= data;
@@ -47,7 +49,9 @@ module cmd_cfg(clk, rst_n, cmd_rdy, cmd, data, clr_cmd_rdy, resp, send_resp, d_p
 	
 	// Holding register for d_roll
 	always_ff @(posedge clk, negedge rst_n) begin
-		if (!rst_n | emer_cntrl)
+		if (!rst_n)
+			d_roll <= 16'h0000;
+		else if (emer_cntrl)
 			d_roll <= 16'h0000;
 		else if (wroll)
 			d_roll <= data;
@@ -55,7 +59,9 @@ module cmd_cfg(clk, rst_n, cmd_rdy, cmd, data, clr_cmd_rdy, resp, send_resp, d_p
 	
 	// Holding register for d_yaw
 	always_ff @(posedge clk, negedge rst_n) begin
-		if (!rst_n | emer_cntrl)
+		if (!rst_n)
+			d_yaw <= 16'h0000;
+		else if (emer_cntrl)
 			d_yaw <= 16'h0000;
 		else if (wyaw)
 			d_yaw <= data;
@@ -63,7 +69,9 @@ module cmd_cfg(clk, rst_n, cmd_rdy, cmd, data, clr_cmd_rdy, resp, send_resp, d_p
 	
 	// Holding register for thrst
 	always_ff @(posedge clk, negedge rst_n) begin
-		if (!rst_n | emer_cntrl)
+		if (!rst_n)
+			thrst <= 9'h000;
+		else if (emer_cntrl)
 			thrst <= 9'h000;
 		else if (wthrst)
 			thrst <= data[8:0];
