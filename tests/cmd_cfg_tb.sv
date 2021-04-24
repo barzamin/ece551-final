@@ -126,8 +126,7 @@ module cmd_cfg_tb();
     fork
       begin : resp_timeout
         repeat(RESP_WAIT_TIMEOUT) @(posedge clk);
-        $display("[!] timeout waiting for `resp` after %d clk cycles", RESP_WAIT_TIMEOUT);
-        $stop();
+        $fatal(1, "[!] timeout waiting for `resp` after %d clk cycles", RESP_WAIT_TIMEOUT);
       end
       @(posedge rmt_resp_rdy) disable resp_timeout;
     join
@@ -139,8 +138,7 @@ module cmd_cfg_tb();
     fork
       begin : decode_timeout
         repeat(DECODE_WAIT_TIMEOUT) @(posedge clk);
-        $display("[!] timeout waiting for `DUT_clr_cmd_rdy` after %d clk cycles", DECODE_WAIT_TIMEOUT);
-        $stop();
+        $fatal(1, "[!] timeout waiting for `DUT_clr_cmd_rdy` after %d clk cycles", DECODE_WAIT_TIMEOUT);
       end
       @(posedge DUT_clr_cmd_rdy) disable decode_timeout;
     join
@@ -161,8 +159,7 @@ module cmd_cfg_tb();
 		fork 
 			begin: CMD_RDY_TIMEOUT
 				repeat (1000000) @(posedge clk);
-				$display("[!] timeout waiting for calibrate cmd to be received");
-				$stop();
+				$fatal(1, "[!] timeout waiting for calibrate cmd to be received");
 			end
 			begin
 				@(posedge DUT.cmd_rdy) disable CMD_RDY_TIMEOUT;
@@ -204,8 +201,7 @@ module cmd_cfg_tb();
 			end
 			begin: CAL_TIMEOUT
 				repeat(CALIBRATE_TIMEOUT) @(posedge clk);
-				$display("[!] timeout waiting for `tmr_full` after %d clk cycles", CALIBRATE_TIMEOUT);
-				$stop();
+				$fatal(1, "[!] timeout waiting for `tmr_full` after %d clk cycles", CALIBRATE_TIMEOUT);
 			end
 		join
 	end
@@ -288,9 +284,9 @@ module cmd_cfg_tb();
 	// Check that motors_off is low after calibrated
 	assert (motors_off === 1'b0)
 	else $fatal(1, "[!] motors_off assert failed (is %h), should be %h", motors_off, 1'h1);
-	
+
 	$display("Test passed!");
-	$stop();
+	$finish();
 	
   end
 endmodule

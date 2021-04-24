@@ -80,8 +80,7 @@ task await_response();
 	fork
 		begin: resp_timeout
 			repeat(RESP_WAIT_TIMEOUT) @(posedge clk);
-			$display("[!] timeout waiting for `resp` after %d clk cycles", RESP_WAIT_TIMEOUT);
-			$stop();
+			$fatal(1, "[!] timeout waiting for `resp` after %d clk cycles", RESP_WAIT_TIMEOUT);
 		end
 		@(posedge resp_rdy) disable resp_timeout;
 	join
@@ -92,8 +91,7 @@ task quad_decode_wait();
 	fork
 		begin: decode_timeout
 			repeat(DECODE_WAIT_TIMEOUT) @(posedge clk);
-			$display("[!] timeout waiting for `DUT_clr_cmd_rdy` after %d clk cycles", DECODE_WAIT_TIMEOUT);
-			$stop();
+			$fatal(1, "[!] timeout waiting for `DUT_clr_cmd_rdy` after %d clk cycles", DECODE_WAIT_TIMEOUT);
 		end
 		@(posedge DUT.clr_cmd_rdy) disable decode_timeout;
 	join
@@ -115,8 +113,7 @@ task remote_send(input logic [7:0] s_cmd, input logic [15:0] s_data);
 	fork 
 		begin: CMD_RDY_TIMEOUT
 			repeat (1000000) @(posedge clk);
-			$display("[!] timeout waiting for cmd to be received");
-			$stop();
+			$fatal(1, "[!] timeout waiting for cmd to be received");
 		end
 		@(posedge iDUT.cmd_rdy) disable CMD_RDY_TIMEOUT;
 	join
@@ -156,8 +153,7 @@ task remote_send(input logic [7:0] s_cmd, input logic [15:0] s_data);
 			end
 			begin: CAL_TIMEOUT
 				repeat(CALIBRATE_TIMEOUT) @(posedge clk);
-				$display("[!] timeout waiting for `tmr_full` after %d clk cycles", CALIBRATE_TIMEOUT);
-				$stop();
+				$fatal(1, "[!] timeout waiting for `tmr_full` after %d clk cycles", CALIBRATE_TIMEOUT);
 			end
 		join
 	end
