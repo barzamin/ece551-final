@@ -111,7 +111,7 @@ def ensure_build_dirs():
 def collect_tests(dir):
     return list(dir.glob('*_tb.sv'))
 
-def testall():
+def test():
     ensure_build_dirs()
     tests = collect_tests(testdir)
 
@@ -160,8 +160,8 @@ def main():
     args = parser.parse_args()
     if args.command == 'synth':
         synth()
-    elif args.command == 'testall':
-        testall()
+    elif args.command == 'test':
+        test()
     elif args.command == 'clean':
         clean()
     else:
