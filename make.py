@@ -134,7 +134,7 @@ def test():
         except VsimUnknownStatusCode as e:
             print(c.FAIL + '[!] unknown vsim return code {}'.format(e.statuscode) + c.RESET)
 
-    print()
+    print(c.OKBLUE + '-'*32 + c.RESET)
     print(c.OKBLUE + '[&] {}/{} tests passed'.format(passed, len(tests)))
 
 def synth():
