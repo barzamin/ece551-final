@@ -57,7 +57,7 @@ class Library:
         try:
             subprocess.run([TOOLS['vlib'], self.name], cwd=self.basedir, check=True, env=QUESTA_ENVVARS)
         except subprocess.CalledProcessError as error:
-            raise Exception('failed to create questasim library: {}', error.output)
+            raise Exception('failed to create questasim library: {}'.format(error.output))
 
     def build(self, sources):
         try:
@@ -66,7 +66,7 @@ class Library:
                 *map(str, sources)],
                 cwd=self.basedir, check=True, env=QUESTA_ENVVARS)
         except subprocess.CalledProcessError as error:
-            raise Exception('failed to compile test source: {}', error.output)
+            raise Exception('failed to compile test source: {}'.format(error.output))
 
 class VsimAssertionFail(Exception): pass
 class VsimUnexpectedError(Exception): pass
@@ -116,7 +116,11 @@ def test():
     tests = collect_tests(testdir)
 
     simlib = Library('ece551tb', basedir=questa_out)
-    simlib.build(src['rtl'] + src['models'])
+    try:
+        simlib.build(src['rtl'] + src['models'])
+    except Exception as e:
+        print(c.BOLD + c.FAIL + '[#] failed to build testbench source. dying')
+        exit(1)
 
     passed = 0
     for test in tests:
