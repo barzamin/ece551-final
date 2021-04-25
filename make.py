@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
+import os
+import argparse
+import subprocess
 from pathlib import Path
 from collections import namedtuple
-import subprocess
-import argparse
-import os
+from jinja2 import Template
 
 class c:
     HEADER    = '\033[95m'
@@ -23,6 +24,9 @@ testdir = basedir / 'tests'
 builddir = basedir / 'build'
 simscript = testdir / 'sim.do'
 
+questa_out = builddir/'questa'
+synth_out = builddir/'synth'
+
 QUESTA_BASE = Path('/cae/apps/data/mentor-2020/questasim')
 QUESTA_BIN = QUESTA_BASE / 'bin'
 QUESTA_ENVVARS = {
@@ -31,14 +35,18 @@ QUESTA_ENVVARS = {
     'MGC_AMS_HOME': '/cae/apps/data/mentor-2020',
     'PATH': os.getenv('PATH'),
 }
-questa_out = builddir/'questa'
 TOOLS = {
     'vsim': str(QUESTA_BIN / 'vsim'),
     'vlib': str(QUESTA_BIN / 'vlib'),
     'vlog': str(QUESTA_BIN / 'vlog'),
+    'design_vision': '/cae/apps/bin/design_vision', # this CAE spoofscript properly loads licensing and process libraries
 }
 
-src_files = list(srcdir.glob('*.sv'))
+src = {
+    'rtl': list(srcdir.glob('*.sv')),
+    'models': list((srcdir/'models').glob('*.sv')),
+}
+
 
 class Library:
     def __init__(self, name, basedir=None):
@@ -96,21 +104,19 @@ class Simulator:
 
 def ensure_build_dirs():
     builddir.mkdir(exist_ok=True)
-    (questa_out).mkdir(exist_ok=True)
+    questa_out.mkdir(exist_ok=True)
+    synth_out.mkdir(exist_ok=True)
+    (synth_out/'reports').mkdir(exist_ok=True)
 
 def collect_tests(dir):
     return list(dir.glob('*_tb.sv'))
-
-def run(args, *aargs, **kwargs):
-    print(' '.join(args))
-    return subprocess.run(args, *aargs, **kwargs)
 
 def testall():
     ensure_build_dirs()
     tests = collect_tests(testdir)
 
     simlib = Library('ece551tb', basedir=questa_out)
-    simlib.build(src_files)
+    simlib.build(src['rtl'] + src['models'])
 
     passed = 0
     for test in tests:
@@ -131,15 +137,33 @@ def testall():
     print()
     print(c.OKBLUE + '[&] {}/{} tests passed'.format(passed, len(tests)))
 
+def synth():
+    ensure_build_dirs()
+    with open(str(basedir / 'synth' / 'synthesize.dc')) as f:
+        template = Template(f.read())
+
+    buildscript = str(synth_out/'synthesize.dc')
+    with open(buildscript, 'w') as f:
+        f.write(template.render(sources=src['rtl']))
+
+    subprocess.run([TOOLS['design_vision'], '-no_gui', '-shell', 'dc_shell',
+            '-f', buildscript],
+        cwd=str(synth_out), check=True)
+
+def clean():
+    subprocess.run(['rm', '-rf', 'build'])
+
 def main():
     parser = argparse.ArgumentParser(description='build system for ece551 final project')
     parser.add_argument('command', metavar='COMMAND')
 
     args = parser.parse_args()
     if args.command == 'synth':
-        pass
-    if args.command == 'testall':
+        synth()
+    elif args.command == 'testall':
         testall()
+    elif args.command == 'clean':
+        clean()
     else:
         raise Exception('invalid command {}'.format(args.command))
 
