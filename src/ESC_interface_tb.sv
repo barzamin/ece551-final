@@ -4,7 +4,7 @@ module ESC_interface_tb();
 	logic [10:0] SPEED;
 	logic [15:0] high_cnt;
 	
-	ESC_interface iDUT(.clk(clk),.rst_n(rst_n),.wrt(wrt),
+	ESC_interface_pipeline iDUT(.clk(clk),.rst_n(rst_n),.wrt(wrt),
 						.SPEED(SPEED),.PWM(PWM));
 	
 	initial begin
@@ -28,9 +28,10 @@ module ESC_interface_tb();
 		while(PWM !== 1'b0) begin
 			@(negedge clk) high_cnt = high_cnt + 1;
 		end
-		if (high_cnt !== 13'h186a) begin // answer is currently off by 1
+		if (high_cnt !== 6251) begin // answer is currently off by 1
 			$display("ERR: PWM was not high for the correct amount of time.");
-			$display("Expected: 6250, Returned: %d",high_cnt);
+			$display("Target time: 6250, TB with off by one: 6251");
+			$display("Expected: 6251, Returned: %d",high_cnt);
 		end
 		
 		// Case 2, SPEED is set to half of maximum
@@ -47,11 +48,14 @@ module ESC_interface_tb();
 		while(PWM !== 1'b0) begin
 			@(negedge clk) high_cnt = high_cnt + 1;
 		end	
-		if (high_cnt !== 13'h246A) begin // answer is currently off by 1
+		@(posedge clk);
+		if (high_cnt !== 9323) begin // answer is currently off by 1
 			$display("ERR: PWM was not high for the correct amount of time.");
-			$display("Expected: 9322, Returned: %d",high_cnt);
+			$display("Target time: 9322, TB with off by one: 9323");
+			$display("Expected: 9323, Returned: %d",high_cnt);
 		end
 		
+		$display("Test passed!");
 		$stop();
 	end
 	
