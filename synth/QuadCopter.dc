@@ -1,0 +1,103 @@
+#############################
+# Read in teh verilog files #
+############################# 
+read_file -format sverilog { 	./UART_tx.sv\
+				./UART_rcv.sv\
+				./UART.sv\
+				./UART_comm.sv\
+				./cmd_cfg.sv\
+				./ESC_interface.sv\
+				./ESCs.sv\
+				./flght_cntrl.sv\
+				./inert_intf.sv\
+				./inertial_integrator.sv\
+				./PB_release.sv\
+				./PD_math.sv\
+				./reset_synch.sv\
+				./SPI_mnrch.sv\
+				./QuadCopter.sv }
+
+###################################
+# Set current design to top level #
+###################################
+set current_design QuadCopter
+
+###########################################
+# Create clk and don't let Synopsis touch #
+###########################################
+create_clock -name "clk" -period 3.75 {clk}
+set_dont_touch_network [find port clk]
+
+# var for all inputs but clk
+set prim_inputs [remove_from_collection [all_inputs] [find port clk]]
+
+########################################
+# Set the clock uncertainty to 0.15 ns #
+########################################
+set_clock_uncertainty 0.20 clk
+
+######################################################
+# Don't let Synopsys do crazy things with internally #
+# generated rst_n signal			     #
+######################################################
+set_dont_touch_network [get_net iRST/rst_n]
+
+####################
+# Set input delays #
+####################
+set_input_delay -clock clk 0.25 $prim_inputs
+
+################################
+# Set drive strength of inputs #
+################################
+set_driving_cell -lib_cell NAND2X2_RVT -library saed32rvt_tt0p85v25c [copy_collection $prim_inputs] 
+
+##########################################################
+# Set max transition time is important for Hot-E reasons #
+##########################################################
+set_max_transition 0.15 [current_design]
+
+####################################
+# Setting Output Delay Constraints #
+####################################
+set_output_delay -clock clk 0.5 [all_outputs]
+# set load of 0.10 pf load on all inputs
+set_load 0.1 [all_outputs]
+
+# Synopsys makes guess at parasitic capacitance, roughly 16000 square microns
+set_wire_load_model -name 16000 -library saed32rvt_tt0p85v25c
+
+
+##################
+# Compile Design #
+##################
+compile -map_effort medium
+
+# flatten
+ungroup -all -flatten
+
+set_fix_hold clk
+
+# compile again
+compile -map_effort medium
+
+# check design
+check_design
+
+###########
+# Reports #
+###########
+report_area > QuadCopter_area.txt
+report_timing -delay max > QuadCopter_max.txt
+report_timing -delay min > QuadCopter_min.txt
+
+###############################################
+# Find out if there are any latches in design #
+###############################################
+report_register -level_sensitive > QuadCopter_latches.txt
+
+# Netlist
+write -format verilog QuadCopter -output QuadCopter.vg
+
+# SDC
+write_sdc QuadCopter.sdc
