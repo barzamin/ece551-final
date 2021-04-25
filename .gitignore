@@ -29,3 +29,5 @@ vsim.dbg
 *.lxt
 *.vcd
 *.fst
+
+build/
