@@ -104,7 +104,7 @@ module cmd_cfg_tb();
     .cal_done     (cal_done),
     .motors_off   (motors_off)
   );
-  
+
   /*------------------------------------------------------------------------------
   --  Commands and responses.
   ------------------------------------------------------------------------------*/
@@ -126,8 +126,7 @@ module cmd_cfg_tb();
     fork
       begin : resp_timeout
         repeat(RESP_WAIT_TIMEOUT) @(posedge clk);
-        $display("[!] timeout waiting for `resp` after %d clk cycles", RESP_WAIT_TIMEOUT);
-        $stop();
+        $fatal(1, "[!] timeout waiting for `resp` after %d clk cycles", RESP_WAIT_TIMEOUT);
       end
       @(posedge rmt_resp_rdy) disable resp_timeout;
     join
@@ -139,8 +138,7 @@ module cmd_cfg_tb();
     fork
       begin : decode_timeout
         repeat(DECODE_WAIT_TIMEOUT) @(posedge clk);
-        $display("[!] timeout waiting for `DUT_clr_cmd_rdy` after %d clk cycles", DECODE_WAIT_TIMEOUT);
-        $stop();
+        $fatal(1, "[!] timeout waiting for `DUT_clr_cmd_rdy` after %d clk cycles", DECODE_WAIT_TIMEOUT);
       end
       @(posedge DUT_clr_cmd_rdy) disable decode_timeout;
     join
@@ -156,79 +154,77 @@ module cmd_cfg_tb();
     rmt_snd_cmd = 1;
     @(negedge clk)
     rmt_snd_cmd = 0;
-	
-	// Wait for the cmd to be received
-		fork 
-			begin: CMD_RDY_TIMEOUT
-				repeat (1000000) @(posedge clk);
-				$display("[!] timeout waiting for calibrate cmd to be received");
-				$stop();
-			end
-			begin
-				@(posedge DUT.cmd_rdy) disable CMD_RDY_TIMEOUT;
-			end
-		join
-		
-	// Test if cmd is CALIBRATE
-	if (s_cmd == CMD_CALIBRATE) begin
-		fork
-			begin
-				// Wait half a clock before checking inertial_cal
-				@(negedge clk);
-				assert (inertial_cal === 1'b1)
-				else $fatal(1, "[!] inertial_cal is not high after sending calibrate cmd.");
-				
-				@(posedge DUT.tmr_full) disable CAL_TIMEOUT;
-				// Wait half a clock before checking strt_cal and inertial_cal
-				@(posedge clk);
-				assert (strt_cal === 1'b1)
-				else $fatal(1, "[!] strt_cal didn't go high after tmr_full came high.");
-				assert (inertial_cal === 1'b1)
-				else $fatal(1, "[!] inertial_cal is not high after tmr_full goes high.");
-				
-				// The next period after being high, strt_cal should be low
-				@(posedge clk);
-				assert (strt_cal === 1'b0)
-				else $fatal(1, "[!] strt_cal stayed high too long.");
-				assert (inertial_cal === 1'b1)
-				else $fatal(1, "[!] inertial_cal is not high after strt_cal goes low.");
-				
-				cal_done = 1'b1;
-				// Check that inertial_cal is low after cal_done goes high
-				@(negedge clk);
-				assert (inertial_cal === 1'b0)
-				else $fatal(1, "[!] inertial_cal is not low after cal_done goes high.");
-				// Set cal_done back to 0 for later tests
-				@(negedge clk);
-				cal_done = 1'b0;
-			end
-			begin: CAL_TIMEOUT
-				repeat(CALIBRATE_TIMEOUT) @(posedge clk);
-				$display("[!] timeout waiting for `tmr_full` after %d clk cycles", CALIBRATE_TIMEOUT);
-				$stop();
-			end
-		join
-	end
-	
+
+  // Wait for the cmd to be received
+    fork
+      begin: CMD_RDY_TIMEOUT
+        repeat (1000000) @(posedge clk);
+        $fatal(1, "[!] timeout waiting for calibrate cmd to be received");
+      end
+      begin
+        @(posedge DUT.cmd_rdy) disable CMD_RDY_TIMEOUT;
+      end
+    join
+
+  // Test if cmd is CALIBRATE
+  if (s_cmd == CMD_CALIBRATE) begin
+    fork
+      begin
+        // Wait half a clock before checking inertial_cal
+        @(negedge clk);
+        assert (inertial_cal === 1'b1)
+        else $fatal(1, "[!] inertial_cal is not high after sending calibrate cmd.");
+
+        @(posedge DUT.tmr_full) disable CAL_TIMEOUT;
+        // Wait half a clock before checking strt_cal and inertial_cal
+        @(posedge clk);
+        assert (strt_cal === 1'b1)
+        else $fatal(1, "[!] strt_cal didn't go high after tmr_full came high.");
+        assert (inertial_cal === 1'b1)
+        else $fatal(1, "[!] inertial_cal is not high after tmr_full goes high.");
+
+        // The next period after being high, strt_cal should be low
+        @(posedge clk);
+        assert (strt_cal === 1'b0)
+        else $fatal(1, "[!] strt_cal stayed high too long.");
+        assert (inertial_cal === 1'b1)
+        else $fatal(1, "[!] inertial_cal is not high after strt_cal goes low.");
+
+        cal_done = 1'b1;
+        // Check that inertial_cal is low after cal_done goes high
+        @(negedge clk);
+        assert (inertial_cal === 1'b0)
+        else $fatal(1, "[!] inertial_cal is not low after cal_done goes high.");
+        // Set cal_done back to 0 for later tests
+        @(negedge clk);
+        cal_done = 1'b0;
+      end
+      begin: CAL_TIMEOUT
+        repeat(CALIBRATE_TIMEOUT) @(posedge clk);
+        $fatal(1, "[!] timeout waiting for `tmr_full` after %d clk cycles", CALIBRATE_TIMEOUT);
+      end
+    join
+  end
+
   endtask
 
   task remote_assertresp(input logic [7:0] tru_resp);
     assert (rmt_resp === tru_resp)
     else $fatal(1, "[remote] expected resp %h !== %h", tru_resp, rmt_resp);
   endtask
-  
+
   initial begin
     // reset all devices
     @(negedge clk) rst_n = 0;
     @(negedge clk) rst_n = 1;
 
-	// -- CALIBRATE
-	remote_send(CMD_CALIBRATE, 16'hxxxx);
-	remote_resp_wait();
-	remote_assertresp(RESP_POS_ACK);
-	
-	assert (motors_off === 1'b0)
-	else $fatal(1, "[!] motors_off assert failed (is %h), should be %h", motors_off, 1'h1);
+  // -- CALIBRATE
+  remote_send(CMD_CALIBRATE, 16'hxxxx);
+  remote_resp_wait();
+  remote_assertresp(RESP_POS_ACK);
+
+  assert (motors_off === 1'b0)
+  else $fatal(1, "[!] motors_off assert failed (is %h), should be %h", motors_off, 1'h1);
 
     // -- SET_PTCH
     remote_send(CMD_SET_PTCH, 16'h1337); // send set pitch from remote
@@ -236,61 +232,61 @@ module cmd_cfg_tb();
     remote_assertresp(RESP_POS_ACK);
     assert (d_ptch === 16'h1337) // check pitch
     else $fatal(1, "[!] d_ptch assert failed (is %h), should be %h", d_ptch, 16'h1337);
-	
-	// -- SET_ROLL
-	remote_send(CMD_SET_ROLL, 16'hAAAA);
-	remote_resp_wait();
-	remote_assertresp(RESP_POS_ACK);
-	assert (d_roll === 16'hAAAA)
-	else $fatal(1, "[!] d_roll assert failed (is %h), should be %h", d_roll, 16'hAAAA);
-	
-	// -- SET_YAW
-	remote_send(CMD_SET_YAW, 16'hAAAA);
-	remote_resp_wait();
-	remote_assertresp(RESP_POS_ACK);
-	assert (d_yaw === 16'hAAAA)
-	else $fatal(1, "[!] d_yaw assert failed (is %h), should be %h", d_yaw, 16'hAAAA);
-	
-	// -- SET_THRST
-	remote_send(CMD_SET_THRST, 16'h0AAA);
-	remote_resp_wait();
-	remote_assertresp(RESP_POS_ACK);
-	assert (thrst === 9'h0AA)
-	else $fatal(1, "[!] thrst assert failed (is %h), should be %h", thrst, 9'h0AA);
-	
-	// -- EMER_LAND
-	remote_send(CMD_EMER_LAND, 16'h0000);
-	remote_resp_wait();
-	remote_assertresp(RESP_POS_ACK);
-	assert (thrst === 9'h00 && d_ptch === 16'h0000 && d_roll === 16'h0000 && d_yaw === 16'h0000)
-	else $fatal(1, "[!] emergency land assert failed. thrst, roll, yaw, or pitch are nonzero.");
-	
-	// -- MTRS_OFF
-	remote_send(CMD_MTRS_OFF, 16'hxxxx);
-	remote_resp_wait();
-	remote_assertresp(RESP_POS_ACK);
-	assert (motors_off === 1'b1)
-	else $fatal(1, "[!] motors_off assert failed (is %h), should be %h", motors_off, 1'h1);
-	
-	// Send another cmd to pass time
-	// Check that motors_off is high after as well
-	remote_send(CMD_SET_ROLL, 16'hAAAA);
-	remote_resp_wait();
-	remote_assertresp(RESP_POS_ACK);
-	assert (motors_off === 1'b1)
-	else $fatal(1, "[!] motors_off assert failed, should be high until calibrated");
-	
-	// Send a calibrate cmd
-	remote_send(CMD_CALIBRATE, 16'hxxxx);
-	remote_resp_wait();
-	remote_assertresp(RESP_POS_ACK);
-	
-	// Check that motors_off is low after calibrated
-	assert (motors_off === 1'b0)
-	else $fatal(1, "[!] motors_off assert failed (is %h), should be %h", motors_off, 1'h1);
-	
-	$display("Test passed!");
-	$stop();
-	
+
+  // -- SET_ROLL
+  remote_send(CMD_SET_ROLL, 16'hAAAA);
+  remote_resp_wait();
+  remote_assertresp(RESP_POS_ACK);
+  assert (d_roll === 16'hAAAA)
+  else $fatal(1, "[!] d_roll assert failed (is %h), should be %h", d_roll, 16'hAAAA);
+
+  // -- SET_YAW
+  remote_send(CMD_SET_YAW, 16'hAAAA);
+  remote_resp_wait();
+  remote_assertresp(RESP_POS_ACK);
+  assert (d_yaw === 16'hAAAA)
+  else $fatal(1, "[!] d_yaw assert failed (is %h), should be %h", d_yaw, 16'hAAAA);
+
+  // -- SET_THRST
+  remote_send(CMD_SET_THRST, 16'h0AAA);
+  remote_resp_wait();
+  remote_assertresp(RESP_POS_ACK);
+  assert (thrst === 9'h0AA)
+  else $fatal(1, "[!] thrst assert failed (is %h), should be %h", thrst, 9'h0AA);
+
+  // -- EMER_LAND
+  remote_send(CMD_EMER_LAND, 16'h0000);
+  remote_resp_wait();
+  remote_assertresp(RESP_POS_ACK);
+  assert (thrst === 9'h00 && d_ptch === 16'h0000 && d_roll === 16'h0000 && d_yaw === 16'h0000)
+  else $fatal(1, "[!] emergency land assert failed. thrst, roll, yaw, or pitch are nonzero.");
+
+  // -- MTRS_OFF
+  remote_send(CMD_MTRS_OFF, 16'hxxxx);
+  remote_resp_wait();
+  remote_assertresp(RESP_POS_ACK);
+  assert (motors_off === 1'b1)
+  else $fatal(1, "[!] motors_off assert failed (is %h), should be %h", motors_off, 1'h1);
+
+  // Send another cmd to pass time
+  // Check that motors_off is high after as well
+  remote_send(CMD_SET_ROLL, 16'hAAAA);
+  remote_resp_wait();
+  remote_assertresp(RESP_POS_ACK);
+  assert (motors_off === 1'b1)
+  else $fatal(1, "[!] motors_off assert failed, should be high until calibrated");
+
+  // Send a calibrate cmd
+  remote_send(CMD_CALIBRATE, 16'hxxxx);
+  remote_resp_wait();
+  remote_assertresp(RESP_POS_ACK);
+
+  // Check that motors_off is low after calibrated
+  assert (motors_off === 1'b0)
+  else $fatal(1, "[!] motors_off assert failed (is %h), should be %h", motors_off, 1'h1);
+
+  $display("Test passed!");
+  $finish();
+
   end
 endmodule
