@@ -89,7 +89,7 @@ module SPI_mnrch_tb;
     spi_reg_write(8'h0d, 8'h02);
     @(posedge done);
 
-    // check
+    // check that NEMO got set up
     @(negedge clk);
     assert (iNEMO.NEMO_setup)
     else $fatal(1, "[!] expected NEMO_setup to go high after config");

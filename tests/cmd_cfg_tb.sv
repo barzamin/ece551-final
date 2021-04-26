@@ -1,5 +1,5 @@
 /*------------------------------------------------------------------------------
---  Team MEI - Ex21 cmd_cfg_tb
+--  Team MEI - cmd_cfg_tb
 ------------------------------------------------------------------------------*/
 `default_nettype none
 module cmd_cfg_tb();
@@ -218,13 +218,13 @@ module cmd_cfg_tb();
     @(negedge clk) rst_n = 0;
     @(negedge clk) rst_n = 1;
 
-  // -- CALIBRATE
-  remote_send(CMD_CALIBRATE, 16'hxxxx);
-  remote_resp_wait();
-  remote_assertresp(RESP_POS_ACK);
+    // -- CALIBRATE
+    remote_send(CMD_CALIBRATE, 16'hxxxx);
+    remote_resp_wait();
+    remote_assertresp(RESP_POS_ACK);
 
-  assert (motors_off === 1'b0)
-  else $fatal(1, "[!] motors_off assert failed (is %h), should be %h", motors_off, 1'h1);
+    assert (motors_off === 1'b0)
+    else $fatal(1, "[!] motors_off assert failed (is %h), should be %h", motors_off, 1'h1);
 
     // -- SET_PTCH
     remote_send(CMD_SET_PTCH, 16'h1337); // send set pitch from remote
@@ -233,60 +233,59 @@ module cmd_cfg_tb();
     assert (d_ptch === 16'h1337) // check pitch
     else $fatal(1, "[!] d_ptch assert failed (is %h), should be %h", d_ptch, 16'h1337);
 
-  // -- SET_ROLL
-  remote_send(CMD_SET_ROLL, 16'hAAAA);
-  remote_resp_wait();
-  remote_assertresp(RESP_POS_ACK);
-  assert (d_roll === 16'hAAAA)
-  else $fatal(1, "[!] d_roll assert failed (is %h), should be %h", d_roll, 16'hAAAA);
+    // -- SET_ROLL
+    remote_send(CMD_SET_ROLL, 16'hAAAA);
+    remote_resp_wait();
+    remote_assertresp(RESP_POS_ACK);
+    assert (d_roll === 16'hAAAA)
+    else $fatal(1, "[!] d_roll assert failed (is %h), should be %h", d_roll, 16'hAAAA);
 
-  // -- SET_YAW
-  remote_send(CMD_SET_YAW, 16'hAAAA);
-  remote_resp_wait();
-  remote_assertresp(RESP_POS_ACK);
-  assert (d_yaw === 16'hAAAA)
-  else $fatal(1, "[!] d_yaw assert failed (is %h), should be %h", d_yaw, 16'hAAAA);
+    // -- SET_YAW
+    remote_send(CMD_SET_YAW, 16'hAAAA);
+    remote_resp_wait();
+    remote_assertresp(RESP_POS_ACK);
+    assert (d_yaw === 16'hAAAA)
+    else $fatal(1, "[!] d_yaw assert failed (is %h), should be %h", d_yaw, 16'hAAAA);
 
-  // -- SET_THRST
-  remote_send(CMD_SET_THRST, 16'h0AAA);
-  remote_resp_wait();
-  remote_assertresp(RESP_POS_ACK);
-  assert (thrst === 9'h0AA)
-  else $fatal(1, "[!] thrst assert failed (is %h), should be %h", thrst, 9'h0AA);
+    // -- SET_THRST
+    remote_send(CMD_SET_THRST, 16'h0AAA);
+    remote_resp_wait();
+    remote_assertresp(RESP_POS_ACK);
+    assert (thrst === 9'h0AA)
+    else $fatal(1, "[!] thrst assert failed (is %h), should be %h", thrst, 9'h0AA);
 
-  // -- EMER_LAND
-  remote_send(CMD_EMER_LAND, 16'h0000);
-  remote_resp_wait();
-  remote_assertresp(RESP_POS_ACK);
-  assert (thrst === 9'h00 && d_ptch === 16'h0000 && d_roll === 16'h0000 && d_yaw === 16'h0000)
-  else $fatal(1, "[!] emergency land assert failed. thrst, roll, yaw, or pitch are nonzero.");
+    // -- EMER_LAND
+    remote_send(CMD_EMER_LAND, 16'h0000);
+    remote_resp_wait();
+    remote_assertresp(RESP_POS_ACK);
+    assert (thrst === 9'h00 && d_ptch === 16'h0000 && d_roll === 16'h0000 && d_yaw === 16'h0000)
+    else $fatal(1, "[!] emergency land assert failed. thrst, roll, yaw, or pitch are nonzero.");
 
-  // -- MTRS_OFF
-  remote_send(CMD_MTRS_OFF, 16'hxxxx);
-  remote_resp_wait();
-  remote_assertresp(RESP_POS_ACK);
-  assert (motors_off === 1'b1)
-  else $fatal(1, "[!] motors_off assert failed (is %h), should be %h", motors_off, 1'h1);
+    // -- MTRS_OFF
+    remote_send(CMD_MTRS_OFF, 16'hxxxx);
+    remote_resp_wait();
+    remote_assertresp(RESP_POS_ACK);
+    assert (motors_off === 1'b1)
+    else $fatal(1, "[!] motors_off assert failed (is %h), should be %h", motors_off, 1'h1);
 
-  // Send another cmd to pass time
-  // Check that motors_off is high after as well
-  remote_send(CMD_SET_ROLL, 16'hAAAA);
-  remote_resp_wait();
-  remote_assertresp(RESP_POS_ACK);
-  assert (motors_off === 1'b1)
-  else $fatal(1, "[!] motors_off assert failed, should be high until calibrated");
+    // Send another cmd to pass time
+    // Check that motors_off is high after as well
+    remote_send(CMD_SET_ROLL, 16'hAAAA);
+    remote_resp_wait();
+    remote_assertresp(RESP_POS_ACK);
+    assert (motors_off === 1'b1)
+    else $fatal(1, "[!] motors_off assert failed, should be high until calibrated");
 
-  // Send a calibrate cmd
-  remote_send(CMD_CALIBRATE, 16'hxxxx);
-  remote_resp_wait();
-  remote_assertresp(RESP_POS_ACK);
+    // Send a calibrate cmd
+    remote_send(CMD_CALIBRATE, 16'hxxxx);
+    remote_resp_wait();
+    remote_assertresp(RESP_POS_ACK);
 
-  // Check that motors_off is low after calibrated
-  assert (motors_off === 1'b0)
-  else $fatal(1, "[!] motors_off assert failed (is %h), should be %h", motors_off, 1'h1);
+    // Check that motors_off is low after calibrated
+    assert (motors_off === 1'b0)
+    else $fatal(1, "[!] motors_off assert failed (is %h), should be %h", motors_off, 1'h1);
 
-  $display("Test passed!");
-  $finish();
-
+    $display("Test passed!");
+    $finish();
   end
 endmodule
