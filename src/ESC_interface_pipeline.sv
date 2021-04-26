@@ -12,6 +12,7 @@ module ESC_interface_pipeline(clk, rst_n, wrt, SPEED, PWM);
 	
 	// logic for pipeline reg
 	logic [10:0] SPEED_ff;
+	logic wrt_ff;
 	
 	// Pipeline reg
 	always_ff @(posedge clk, negedge rst_n) begin
@@ -19,6 +20,14 @@ module ESC_interface_pipeline(clk, rst_n, wrt, SPEED, PWM);
 			SPEED_ff <= 11'h000;
 		else
 			SPEED_ff <= SPEED;
+	end
+	
+	// Pipeline for wrt sig
+	always_ff @(posedge clk, negedge rst_n) begin
+		if (!rst_n)
+			wrt_ff <= 1'b0;
+		else
+			wrt_ff <= wrt;
 	end
 
 	// multiply speed input by three and add to 6250 to get number of clk cycles
@@ -29,7 +38,7 @@ module ESC_interface_pipeline(clk, rst_n, wrt, SPEED, PWM);
 	always @(posedge clk, negedge rst_n) begin
 		if (!rst_n)
 			q1 <= 14'h0000;
-		else if (wrt)
+		else if (wrt_ff)
 			q1 <= num_ticks;
 		else
 			q1 <= q1 - 1'b1;
@@ -39,7 +48,7 @@ module ESC_interface_pipeline(clk, rst_n, wrt, SPEED, PWM);
 	assign Rst = (~|(q1)) ? 1'b1 : 1'b0;
 
 	// Set goes high when wrt is high
-	assign Set = (wrt) ? 1'b1 : 1'b0;
+	assign Set = (wrt_ff) ? 1'b1 : 1'b0;
 
 	// Final flop with asynch reset, PWM goes to 1 when set is high,
 	// 0 when Rst is high, and retains its value if neither are high.

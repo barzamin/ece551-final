@@ -32,6 +32,9 @@ output [10:0] rght_spd;						// 11-bit unsigned speed at which to right front mo
   localparam MIN_RUN_SPEED = 13'h2C0;	// minimum speed while running  
   localparam D_COEFF = 5'b00111;		// D coefficient in PID control = +7
   
+  // Declarations for pipeline flops
+  logic [12:0] frnt_sum_ff, bck_sum_ff, lft_sum_ff, rght_sum_ff;
+  
   //////////////////////////////////////
   // Instantiate 3 copies of PD_math //
   ////////////////////////////////////
@@ -56,11 +59,43 @@ output [10:0] rght_spd;						// 11-bit unsigned speed at which to right front mo
   assign lft_sum = MIN_RUN_SPEED + thrst_13 - roll_13_pterm - roll_13_dterm + yaw_13_pterm + yaw_13_dterm;
   assign rght_sum = MIN_RUN_SPEED + thrst_13 + roll_13_pterm + roll_13_dterm + yaw_13_pterm + yaw_13_dterm;
   
+  // Pipeline flop for frnt_sum
+  always_ff @(posedge clk, negedge rst_n) begin
+	if (!rst_n)
+		frnt_sum_ff <= 11'h000;
+	else
+		frnt_sum_ff <= frnt_sum;
+  end
+  
+  // Pipeline flop for bck_sum
+  always_ff @(posedge clk, negedge rst_n) begin
+	if (!rst_n)
+		bck_sum_ff <= 11'h000;
+	else
+		bck_sum_ff <= bck_sum;
+  end
+  
+  // Pipeline flop for lft_sum
+  always_ff @(posedge clk, negedge rst_n) begin
+	if (!rst_n)
+		lft_sum_ff <= 11'h000;
+	else
+		lft_sum_ff <= lft_sum;
+  end
+  
+  // Pipeline flop for rght_sum
+  always_ff @(posedge clk, negedge rst_n) begin
+	if (!rst_n)
+		rght_sum_ff <= 11'h000;
+	else
+		rght_sum_ff <= rght_sum;
+  end
+  
   // Saturate each sum to 11-bits (unsigned)
-  assign frnt_sat = (|frnt_sum[12:11]) ? 11'h7ff : frnt_sum[10:0];
-  assign bck_sat = (|bck_sum[12:11]) ? 11'h7ff : bck_sum[10:0];
-  assign lft_sat = (|lft_sum[12:11]) ? 11'h7ff : lft_sum[10:0];
-  assign rght_sat = (|rght_sum[12:11]) ? 11'h7ff : rght_sum[10:0];
+  assign frnt_sat = (|frnt_sum_ff[12:11]) ? 11'h7ff : frnt_sum_ff[10:0];
+  assign bck_sat = (|bck_sum_ff[12:11]) ? 11'h7ff : bck_sum_ff[10:0];
+  assign lft_sat = (|lft_sum_ff[12:11]) ? 11'h7ff : lft_sum_ff[10:0];
+  assign rght_sat = (|rght_sum_ff[12:11]) ? 11'h7ff : rght_sum_ff[10:0];
   
   // Select between CAL_SPEED and motor result depending on calibrating or not
   assign frnt_spd = (inertial_cal) ? CAL_SPEED : frnt_sat;

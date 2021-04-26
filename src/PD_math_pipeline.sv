@@ -18,6 +18,7 @@ module PD_math_pipeline(pterm, dterm, clk, rst_n, vld, desired, actual);
 	logic [6:0] D_diff_sat_ff;
 	//logic signed [10:0] dterm_ff;
 	logic signed [9:0] pterm_ff;
+	logic [9:0] err_sat_ff;
 	
 	genvar i;
 
@@ -27,6 +28,14 @@ module PD_math_pipeline(pterm, dterm, clk, rst_n, vld, desired, actual);
 	assign err_sat = (err[16]) ?
 						((&err[15:9] == 0) ? 10'h200 : err[9:0]) :
 						((|err[15:9]) ? 10'h1ff : err[9:0]);
+						
+	// err_sat pipeline reg
+	always_ff @(posedge clk, negedge rst_n) begin
+		if (!rst_n)
+			err_sat_ff <= 10'h000;
+		else
+			err_sat_ff <= err_sat;
+	end
 	
 	//////////////////////////////////////////////
 	// Parametizable Queue depth for Derivative //
@@ -47,7 +56,7 @@ module PD_math_pipeline(pterm, dterm, clk, rst_n, vld, desired, actual);
 	endgenerate
 		
 	// Subtract past error from current error to approximate derivative
-	assign D_diff = err_sat - prev_err[D_QUEUE_DEPTH-1];
+	assign D_diff = err_sat_ff - prev_err[D_QUEUE_DEPTH-1];
 	
 	// Saturate D_diff to 7 bits
 	assign D_diff_sat = (D_diff[9]) ?
@@ -64,13 +73,6 @@ module PD_math_pipeline(pterm, dterm, clk, rst_n, vld, desired, actual);
 	
 	// Signed multiply of D_diff_sat
 	assign dterm = $signed(D_diff_sat_ff) * $signed(DTERM);
-	
-	/*always_ff @(posedge clk, negedge rst_n) begin
-		if (!rst_n)
-			dterm <= 11'h000;
-		else 
-			dterm <= dterm_ff;
-	end*/
 	
 	// Shift err_sat right once to divide by two, sign extending msb
 	assign err_sat_half = {err_sat[9], err_sat[9:1]};

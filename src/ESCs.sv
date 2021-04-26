@@ -22,16 +22,16 @@ module ESCs(clk, rst_n, frnt_spd, bck_spd, lft_spd, rght_spd, motors_off,
   logic [10:0] frnt_cmd, bck_cmd, lft_cmd, rght_cmd;
 
   // Instantiations of ESC_interfaces
-  ESC_interface frntESC(.clk(clk), .rst_n(rst_n), .wrt(wrt),
+  ESC_interface_pipeline frntESC(.clk(clk), .rst_n(rst_n), .wrt(wrt),
               .SPEED(frnt_cmd), .PWM(frnt));
 
-  ESC_interface bckESC(.clk(clk), .rst_n(rst_n), .wrt(wrt),
+  ESC_interface_pipeline bckESC(.clk(clk), .rst_n(rst_n), .wrt(wrt),
               .SPEED(bck_cmd), .PWM(bck));
 
-  ESC_interface lftESC(.clk(clk), .rst_n(rst_n), .wrt(wrt),
+  ESC_interface_pipeline lftESC(.clk(clk), .rst_n(rst_n), .wrt(wrt),
               .SPEED(lft_cmd), .PWM(lft));
 
-  ESC_interface rghtESC(.clk(clk), .rst_n(rst_n), .wrt(wrt),
+  ESC_interface_pipeline rghtESC(.clk(clk), .rst_n(rst_n), .wrt(wrt),
               .SPEED(rght_cmd), .PWM(rght));
 
   // Muxes to select between spd inputs and 11'h0000 depending on
