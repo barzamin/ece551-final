@@ -169,6 +169,11 @@ task convergence_check(input logic [7:0] s_cmd, input logic [15:0] s_data);
   end
 endtask
 
+task thrust_check(input logic [7:0] s_cmd, input logic [15:0] s_data);
+  if(s_cmd == SET_THRST && iDUT.thrst !== {s_data[8:0]})
+    $fatal(1, "[!] iDUT.thrst failed to update to %d. iDUT.thrst = %d", s_data[8:0], iDUT.thrst);
+endtask
+
 initial begin
   clk = 1'b0;
   RST_n = 1'b0;
@@ -181,15 +186,34 @@ initial begin
   repeat(2) @(negedge clk);
   RST_n = 1'b1;
   
+  // THRUST
   remote_send(SET_THRST, 16'h00AA);
   await_response();
+  thrust_check(SET_THRST, 16'h00AA);
   $stop();
+
+  // PITCH
   remote_send(SET_PITCH, 16'h00AA);
   await_response();
   convergence_check(SET_PITCH, 16'h00AA);
   $stop();
+
+  // YAW
+  remote_send(SET_YAW, 16'h0099);
+  await_response();
+  convergence_check(SET_YAW, 16'h0099);
+  $stop();
+
+  // ROLL
+  remote_send(SET_ROLL, 16'h0066);
+  await_response();
+  convergence_check(SET_YAW, 16'h0066);
+  $stop();
+
   repeat(1000000) @(posedge clk);
   $stop();
+
+  // CALIBRATE
   remote_send(CALIBRATE, 16'h0);
   await_response();
   $stop();
