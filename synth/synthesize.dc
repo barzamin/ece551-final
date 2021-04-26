@@ -54,6 +54,7 @@ check_design
 report_timing -path full -delay max -nworst 3 > reports/max_worst.timing.txt
 report_timing -path full -delay min -nworst 3 > reports/min_worst.timing.txt
 report_area > reports/area.txt
+report_register > reports/registers.txt
 report_register -level_sensitive > reports/latches.txt
 check_design > reports/drc.txt
 
@@ -62,3 +63,5 @@ write -format verilog -output QuadCopter.vg QuadCopter
 
 ## -- write design constraints
 write_sdc QuadCopter.sdc
+
+quit
