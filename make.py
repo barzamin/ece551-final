@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import shutil
 import argparse
 import subprocess
 from pathlib import Path
@@ -124,6 +125,10 @@ def ensure_build_dirs():
 def test(args):
     ensure_build_dirs()
 
+    # copy test data
+    for p in testdir.glob('*.hex'):
+        shutil.copy(str(p), str(questa_out))
+
     if args.test == []:
         tests = src['testbenches']
     else:
@@ -170,7 +175,7 @@ def synth(args):
         cwd=str(synth_out), check=True)
 
 def clean(args):
-    subprocess.run(['rm', '-rf', 'build'])
+    shutil.rmtree(str(builddir), ignore_errors=True)
 
 def main():
     parser = argparse.ArgumentParser(description='build system for ece551 final project')
