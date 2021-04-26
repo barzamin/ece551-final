@@ -1,12 +1,16 @@
-module PD_math(pterm, dterm, clk, rst_n, vld, desired, actual);
+module PD_math (
+  input wire logic clk,   // clock
+  input wire logic rst_n, // reset (active low)
+  input wire logic vld, // new inertial sensor reading is valid
+  input wire logic [15:0] desired, // desired output
+  input wire logic [15:0] actual, // actual output
 
-  output [9:0] pterm;
-  output [11:0] dterm;
-  input clk, rst_n, vld;
-  input [15:0] actual, desired;
+  output wire logic signed [11:0] dterm, // 12-bit signed dterm = sat7(D_diff) * DTERM
+  output wire logic signed [9 :0] pterm  // 10-bit signed pterm = 5/8 * err_sat
+);
 
   localparam DTERM = 5'b00111;
-  localparam D_QUEUE_DEPTH = 12;
+  localparam D_QUEUE_DEPTH = 12; // length of derivative delay queue
 
   logic [16:0] err;
   logic [9:0] err_sat, D_diff;
