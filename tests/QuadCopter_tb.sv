@@ -166,88 +166,55 @@ function [15:0] abs(input signed [15:0] data);
 		abs = data;
 endfunction
 
-localparam CONVERGENCE_PERIOD = 100000000; // Too short? Too long?
+localparam CONVERGENCE_PERIOD = 100000000;
+localparam CONVERGENCE_MARGIN = 10;
 task convergence_check(input logic [7:0] s_cmd, input logic [15:0] s_data);
-  /*repeat(CONVERGENCE_PERIOD) @(posedge clk);
-  if(s_cmd == SET_PITCH && iDUT.ptch !== s_data)
-    $fatal(1, "[!] iDUT.ptch failed to converge to %d in %d clk cycles. iDUT.ptch = %d", s_data, CONVERGENCE_PERIOD, iDUT.ptch);
-  else if(s_cmd == SET_ROLL && iDUT.roll !== s_data)
-    $fatal(1, "[!] iDUT.roll failed to converge to %d in %d clk cycles. iDUT.roll = %d", s_data, CONVERGENCE_PERIOD, iDUT.roll);
-  else if(s_cmd == SET_YAW && iDUT.yaw !== s_data)
-    $fatal(1, "[!] iDUT.yaw failed to converge to %d in %d clk cycles. iDUT.yaw = %d", s_data, CONVERGENCE_PERIOD, iDUT.yaw);
-  else if(s_cmd == E_LAND) begin
-    assert(iDUT.ptch !== 16'b0)
-    else $error("[!] iDUT.ptch failed to converge to 0 in %d clk cycles. iDUT.ptch = %d", CONVERGENCE_PERIOD, iDUT.ptch);
-    assert(iDUT.roll !== 16'b0)
-    else $error("[!] iDUT.roll failed to converge to 0 in %d clk cycles. iDUT.roll = %d", CONVERGENCE_PERIOD, iDUT.roll);
-    assert(iDUT.yaw !== 16'b0)
-    else $error("[!] iDUT.yaw failed to converge to 0 in %d clk cycles. iDUT.yaw = %d", CONVERGENCE_PERIOD, iDUT.yaw);
-    $fatal(1, "[!] E_LAND cmd failed.");
-  end*/
-  
   fork
+  // If the corresponding convergence signals haven't gone high by now, test failed.
 	begin: converge_timeout
 	  repeat(CONVERGENCE_PERIOD) @(posedge clk);
 	  case(s_cmd)
-		SET_PITCH: begin
+		SET_PITCH:
 		  $fatal(1, "[!] iDUT.ptch failed to converge to %d in %d clk cycles. iDUT.ptch = %d", s_data, CONVERGENCE_PERIOD, iDUT.ptch);
-		end
-		SET_ROLL: begin
+		SET_ROLL:
 		  $fatal(1, "[!] iDUT.roll failed to converge to %d in %d clk cycles. iDUT.roll = %d", s_data, CONVERGENCE_PERIOD, iDUT.roll);
-		end
-		SET_YAW: begin
+		SET_YAW:
 		  $fatal(1, "[!] iDUT.yaw failed to converge to %d in %d clk cycles. iDUT.yaw = %d", s_data, CONVERGENCE_PERIOD, iDUT.yaw);
-		end
+    // For E_LAND, pitch/roll/yaw should all converge to 0.
 		E_LAND: begin
-		  assert(abs(iDUT.ptch) < 4)
-		  else begin
-		    $error("[!] iDUT.ptch failed to converge to 0 in %d clk cycles. iDUT.ptch = %d", CONVERGENCE_PERIOD, iDUT.ptch);
-		  end
-		  assert(abs(iDUT.roll) < 4)
-		  else begin 
-		    $error("[!] iDUT.roll failed to converge to 0 in %d clk cycles. iDUT.roll = %d", CONVERGENCE_PERIOD, iDUT.roll);
-		  end
-		  assert(abs(iDUT.yaw) < 4)
-		  else begin
-		    $error("[!] iDUT.yaw failed to converge to 0 in %d clk cycles. iDUT.yaw = %d", CONVERGENCE_PERIOD, iDUT.yaw);
-		  end
+		  assert(abs(iDUT.ptch) < CONVERGENCE_MARGIN)
+		  else $error("[!] iDUT.ptch failed to converge to 0 in %d clk cycles. iDUT.ptch = %d", CONVERGENCE_PERIOD, iDUT.ptch);
+		  assert(abs(iDUT.roll) < CONVERGENCE_MARGIN)
+		  else $error("[!] iDUT.roll failed to converge to 0 in %d clk cycles. iDUT.roll = %d", CONVERGENCE_PERIOD, iDUT.roll);
+		  assert(abs(iDUT.yaw) < CONVERGENCE_MARGIN)
+		  else $error("[!] iDUT.yaw failed to converge to 0 in %d clk cycles. iDUT.yaw = %d", CONVERGENCE_PERIOD, iDUT.yaw);
+      end
+    endcase
 		  $fatal(1, "[!] E_LAND cmd failed.");
-		end
-	  endcase
 	end
 	begin
 	  case(s_cmd)
-	    SET_PITCH: begin
-		  @(posedge ptch_converge);
-		end
-		SET_ROLL: begin
-		  @(posedge roll_converge);
-		end
-		SET_YAW: begin
-		  @(posedge yaw_converge);
-		end
-		E_LAND: begin
-		  fork
-		    begin
-			  @(posedge ptch_converge);
-			end
-			begin
-			  @(posedge roll_converge);
-			end
-			begin
-			  @(posedge yaw_converge);
-			end
-		  join
-		end
+      SET_PITCH:
+        @(posedge ptch_converge);
+      SET_ROLL:
+        @(posedge roll_converge);
+      SET_YAW:
+        @(posedge yaw_converge);
+      E_LAND:
+        fork
+          @(posedge ptch_converge);
+          @(posedge roll_converge);
+          @(posedge yaw_converge);
+        join
 	  endcase
 	  disable converge_timeout;
 	end
   join
 endtask
 
-assign ptch_converge = (abs(iDUT.ptch - data) < 4) ? 1'b1 : 1'b0;
-assign roll_converge = (abs(iDUT.roll - data) < 4) ? 1'b1 : 1'b0;
-assign yaw_converge = (abs(iDUT.yaw - data) < 4) ? 1'b1 : 1'b0;
+assign ptch_converge = (abs(iDUT.ptch - data) < CONVERGENCE_MARGIN) ? 1'b1 : 1'b0;
+assign roll_converge = (abs(iDUT.roll - data) < CONVERGENCE_MARGIN) ? 1'b1 : 1'b0;
+assign yaw_converge = (abs(iDUT.yaw - data) < CONVERGENCE_MARGIN) ? 1'b1 : 1'b0;
 
 task thrust_check(input logic [7:0] s_cmd, input logic [15:0] s_data);
   if(s_cmd == SET_THRST && iDUT.thrst !== {s_data[8:0]})
@@ -269,34 +236,29 @@ initial begin
   // CALIBRATE
   remote_send(CALIBRATE, 16'h0);
   await_response();
-  //$stop();
   
   // THRUST
   remote_send(SET_THRST, 16'h00AA);
   await_response();
   thrust_check(SET_THRST, 16'h00AA);
-  //$stop();
 
-  // PITCH
+  // PITCH/YAW/ROLL
   remote_send(SET_PITCH, 16'h00AA);
   await_response();
-  convergence_check(SET_PITCH, 16'h00AA);
-  //$stop();
-
-  // YAW
   remote_send(SET_YAW, 16'h0099);
   await_response();
-  convergence_check(SET_YAW, 16'h0099);
-  //$stop();
-
-  // ROLL
   remote_send(SET_ROLL, 16'h0066);
   await_response();
-  convergence_check(SET_YAW, 16'h0066);
-  //$stop();
+  fork
+    convergence_check(SET_PITCH, 16'h00AA);
+    convergence_check(SET_YAW, 16'h0099);
+    convergence_check(SET_ROLL, 16'h0066);
+  join
 
-  repeat(1000000) @(posedge clk);
-  $stop();
+  remote_send(E_LAND, 16'h0000);
+  await_response();
+  convergence_check(E_LAND, 16'h0000);
+  $finish();
 end
 
 always
@@ -314,3 +276,21 @@ endmodule
 //     @(posedge iDUT.clr_cmd_rdy) disable decode_timeout;
 //   join
 // endtask
+
+
+  /*repeat(CONVERGENCE_PERIOD) @(posedge clk);
+  if(s_cmd == SET_PITCH && iDUT.ptch !== s_data)
+    $fatal(1, "[!] iDUT.ptch failed to converge to %d in %d clk cycles. iDUT.ptch = %d", s_data, CONVERGENCE_PERIOD, iDUT.ptch);
+  else if(s_cmd == SET_ROLL && iDUT.roll !== s_data)
+    $fatal(1, "[!] iDUT.roll failed to converge to %d in %d clk cycles. iDUT.roll = %d", s_data, CONVERGENCE_PERIOD, iDUT.roll);
+  else if(s_cmd == SET_YAW && iDUT.yaw !== s_data)
+    $fatal(1, "[!] iDUT.yaw failed to converge to %d in %d clk cycles. iDUT.yaw = %d", s_data, CONVERGENCE_PERIOD, iDUT.yaw);
+  else if(s_cmd == E_LAND) begin
+    assert(iDUT.ptch !== 16'b0)
+    else $error("[!] iDUT.ptch failed to converge to 0 in %d clk cycles. iDUT.ptch = %d", CONVERGENCE_PERIOD, iDUT.ptch);
+    assert(iDUT.roll !== 16'b0)
+    else $error("[!] iDUT.roll failed to converge to 0 in %d clk cycles. iDUT.roll = %d", CONVERGENCE_PERIOD, iDUT.roll);
+    assert(iDUT.yaw !== 16'b0)
+    else $error("[!] iDUT.yaw failed to converge to 0 in %d clk cycles. iDUT.yaw = %d", CONVERGENCE_PERIOD, iDUT.yaw);
+    $fatal(1, "[!] E_LAND cmd failed.");
+  end*/

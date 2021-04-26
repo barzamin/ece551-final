@@ -26,12 +26,12 @@ add wave -noupdate -divider {Global Signals}
 add wave -noupdate -radix binary /QuadCopter_tb/RST_n
 add wave -noupdate -radix binary /QuadCopter_tb/clk
 add wave -noupdate -divider {Actual - Pitch/Roll/Yaw/Thrust}
-add wave -noupdate -radix unsigned /QuadCopter_tb/iDUT/ptch
-add wave -noupdate -radix unsigned /QuadCopter_tb/iDUT/roll
-add wave -noupdate -radix unsigned /QuadCopter_tb/iDUT/yaw
+add wave -noupdate -format Analog-Step -height 74 -max 173.0 -min -1.0 -radix decimal /QuadCopter_tb/iDUT/ptch
+add wave -noupdate -format Analog-Step -height 74 -max 116.0 -min -1.0 -radix decimal /QuadCopter_tb/iDUT/roll
+add wave -noupdate -format Analog-Step -height 74 -max 154.0 -radix decimal /QuadCopter_tb/iDUT/yaw
 add wave -noupdate -radix unsigned /QuadCopter_tb/iDUT/thrst
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {1826215 ps} 0}
+WaveRestoreCursors {{Cursor 1} {282855770 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 304
 configure wave -valuecolwidth 100
@@ -47,4 +47,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ps} {10693505 ps}
+WaveRestoreZoom {0 ps} {396619313 ps}
