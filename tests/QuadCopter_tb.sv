@@ -184,7 +184,7 @@ task convergence_check(input logic [7:0] s_cmd, input logic [15:0] s_data);
     else $error("[!] iDUT.yaw failed to converge to 0 in %d clk cycles. iDUT.yaw = %d", CONVERGENCE_PERIOD, iDUT.yaw);
     $fatal(1, "[!] E_LAND cmd failed.");
   end*/
-  
+
   fork
 	begin: converge_timeout
 	  repeat(CONVERGENCE_PERIOD) @(posedge clk);
@@ -204,7 +204,7 @@ task convergence_check(input logic [7:0] s_cmd, input logic [15:0] s_data);
 		    $error("[!] iDUT.ptch failed to converge to 0 in %d clk cycles. iDUT.ptch = %d", CONVERGENCE_PERIOD, iDUT.ptch);
 		  end
 		  assert(abs(iDUT.roll) < 4)
-		  else begin 
+		  else begin
 		    $error("[!] iDUT.roll failed to converge to 0 in %d clk cycles. iDUT.roll = %d", CONVERGENCE_PERIOD, iDUT.roll);
 		  end
 		  assert(abs(iDUT.yaw) < 4)
@@ -257,7 +257,7 @@ endtask
 initial begin
   clk = 1'b0;
   RST_n = 1'b0;
-  
+
   send_cmd = 1'b0;
   clr_resp_rdy = 1'b0;
   host_cmd = 8'b0;
@@ -265,12 +265,12 @@ initial begin
 
   repeat(2) @(negedge clk);
   RST_n = 1'b1;
-  
+
   // CALIBRATE
   remote_send(CALIBRATE, 16'h0);
   await_response();
   //$stop();
-  
+
   // THRUST
   remote_send(SET_THRST, 16'h00AA);
   await_response();
@@ -296,7 +296,7 @@ initial begin
   //$stop();
 
   repeat(1000000) @(posedge clk);
-  $stop();
+  $finish();
 end
 
 always
