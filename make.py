@@ -45,6 +45,7 @@ TOOLS = {
 src = {
     'rtl': list(srcdir.glob('*.sv')),
     'models': list((srcdir/'models').glob('*.sv')),
+    'testbenches': list(testdir.glob('*_tb.sv'))
 }
 
 
@@ -81,9 +82,11 @@ class Simulator:
         self.library = library
         self.toplevel = toplevel
 
-    def simulate(self, *args):
+    def simulate(self, *args, **kwargs):
         try:
-            proc = self._exec(*args)
+            proc = self._exec(
+                *args,
+                **kwargs)
         except subprocess.CalledProcessError as err:
             if err.returncode == 1:
                 raise VsimAssertionFail()
@@ -94,9 +97,19 @@ class Simulator:
             else:
                 raise VsimUnknownStatusCode(err.returncode)
 
-    def _exec(self, *args):
+    def _exec(self, *args, dump_all=False, vcd_all=False):
+        do = ''
+        if dump_all:
+            do += 'add log -r sim:/*; '
+        if vcd_all:
+            do += 'vcd file {}.vcd; vcd add -r sim:/*; '.format(self.toplevel)
+
+        do += 'do {}'.format(str(simscript))
         return subprocess.run([TOOLS['vsim'], '-batch',
-                '-do', str(simscript),
+                '-wlf', '{}.wlf'.format(self.toplevel),
+                '-work', self.library.name,
+                '-vopt', '-voptargs=+acc',
+                '-do', do,
                 *args,
                 '{}.{}'.format(self.library.name, self.toplevel)],
             cwd=str(questa_out),
@@ -108,16 +121,17 @@ def ensure_build_dirs():
     synth_out.mkdir(exist_ok=True)
     (synth_out/'reports').mkdir(exist_ok=True)
 
-def collect_tests(dir):
-    return list(dir.glob('*_tb.sv'))
-
-def test():
+def test(args):
     ensure_build_dirs()
-    tests = collect_tests(testdir)
+
+    if args.test == []:
+        tests = src['testbenches']
+    else:
+        tests = [testdir / '{}.sv'.format(t) for t in args.test]
 
     simlib = Library('ece551tb', basedir=questa_out)
     try:
-        simlib.build(src['rtl'] + src['models'])
+        simlib.build(src['rtl'] + src['models'] + tests)
     except Exception as e:
         print(c.BOLD + c.FAIL + '[#] failed to build testbench source. dying')
         exit(1)
@@ -126,7 +140,8 @@ def test():
     for test in tests:
         print(c.HEADER + '[-] running test {}'.format(test.stem) + c.RESET)
         try:
-            Simulator(simlib, test.stem).simulate()
+            simargs = []
+            Simulator(simlib, test.stem).simulate(dump_all=args.dump_all, vcd_all=args.vcd_all)
             print(c.BOLD + c.OKGREEN + '[*] test passed' + c.RESET)
             passed += 1
         except VsimAssertionFail as e:
@@ -141,7 +156,7 @@ def test():
     print(c.OKBLUE + '-'*32 + c.RESET)
     print(c.OKBLUE + '[&] {}/{} tests passed'.format(passed, len(tests)))
 
-def synth():
+def synth(args):
     ensure_build_dirs()
     with open(str(basedir / 'synth' / 'synthesize.dc')) as f:
         template = Template(f.read())
@@ -154,22 +169,29 @@ def synth():
             '-f', buildscript],
         cwd=str(synth_out), check=True)
 
-def clean():
+def clean(args):
     subprocess.run(['rm', '-rf', 'build'])
 
 def main():
     parser = argparse.ArgumentParser(description='build system for ece551 final project')
-    parser.add_argument('command', metavar='COMMAND')
+    # parser.add_argument('command', metavar='COMMAND')
+    subparsers = parser.add_subparsers(title='subcommands',
+                                       description='tasks')
+
+    parser_tests = subparsers.add_parser('test')
+    parser_tests.add_argument('test', nargs='*')
+    parser_tests.add_argument('--dump-all', action='store_true')
+    parser_tests.add_argument('--vcd-all', action='store_true')
+    parser_tests.set_defaults(func=test)
+
+    parser_synth = subparsers.add_parser('synth')
+    parser_synth.set_defaults(func=synth)
+
+    parser_clean = subparsers.add_parser('clean')
+    parser_clean.set_defaults(func=clean)
 
     args = parser.parse_args()
-    if args.command == 'synth':
-        synth()
-    elif args.command == 'test':
-        test()
-    elif args.command == 'clean':
-        clean()
-    else:
-        raise Exception('invalid command {}'.format(args.command))
+    args.func(args)
 
 if __name__ == '__main__':
     main()
