@@ -1,4 +1,4 @@
-quietly set BreakOnAssertion 0
+quietly set BreakOnAssertion 2
 
 onbreak {
   lassign [runStatus -full] status fullstat

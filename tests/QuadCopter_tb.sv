@@ -224,7 +224,7 @@ endtask
 initial begin
   clk = 1'b0;
   RST_n = 1'b0;
-  
+
   send_cmd = 1'b0;
   clr_resp_rdy = 1'b0;
   host_cmd = 8'b0;
@@ -232,7 +232,7 @@ initial begin
 
   repeat(2) @(negedge clk);
   RST_n = 1'b1;
-  
+
   // CALIBRATE
   remote_send(CALIBRATE, 16'h0);
   await_response();
