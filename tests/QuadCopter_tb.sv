@@ -24,6 +24,9 @@ localparam CALIBRATE	= 8'h06;
 localparam E_LAND		= 8'h07;
 localparam MOTORS_OFF	= 8'h08;
 
+// Converge signals
+logic ptch_converge, roll_converge, yaw_converge;
+
 ////////////////////////////////////////////////////////////////
 // Instantiate Physical Model of Copter with Inertial sensor //
 //////////////////////////////////////////////////////////////
@@ -80,9 +83,16 @@ task await_response();
       repeat(RESP_WAIT_TIMEOUT_CYCLES) @(posedge clk);
       $fatal(1, "[!] timeout waiting for `resp` after %d clk cycles", RESP_WAIT_TIMEOUT_CYCLES);
     end
-    @(posedge resp_rdy) disable resp_timeout;
-    @(negedge clk) clr_resp_rdy = 1'b1;
-    @(negedge clk) clr_resp_rdy = 1'b0;
+	begin
+      @(posedge resp_rdy) disable resp_timeout;
+	  assert(resp === 8'hA5)
+	  else begin
+		$display("Response received was not positive ack (8'hA5). Received: %h",resp);
+		$stop();
+	  end
+	  @(negedge clk) clr_resp_rdy = 1'b1;
+      @(negedge clk) clr_resp_rdy = 1'b0;
+	end
   join
 endtask
 
@@ -137,9 +147,9 @@ task remote_send(input logic [7:0] s_cmd, input logic [15:0] s_data);
         @(negedge clk);
         assert (iDUT.inertial_cal === 1'b0)
         else $fatal(1, "[!] inertial_cal is not low after cal_done goes high.");
-        // Set cal_done back to 0 for later tests
+        // cal_done should go low
         @(negedge clk);
-        @(negedge iDUT.cal_done);
+        //@(negedge iDUT.cal_done);
       end
       begin: CAL_TIMEOUT
         repeat(CALIBRATE_TIMEOUT_CYCLES) @(posedge clk);
@@ -149,9 +159,16 @@ task remote_send(input logic [7:0] s_cmd, input logic [15:0] s_data);
   end
 endtask
 
-localparam CONVERGENCE_PERIOD = 1000000; // Too short? Too long?
+function [15:0] abs(input signed [15:0] data);
+	if (data < 0)
+		abs = -data;
+	else
+		abs = data;
+endfunction
+
+localparam CONVERGENCE_PERIOD = 100000000; // Too short? Too long?
 task convergence_check(input logic [7:0] s_cmd, input logic [15:0] s_data);
-  repeat(CONVERGENCE_PERIOD) @(posedge clk);
+  /*repeat(CONVERGENCE_PERIOD) @(posedge clk);
   if(s_cmd == SET_PITCH && iDUT.ptch !== s_data)
     $fatal(1, "[!] iDUT.ptch failed to converge to %d in %d clk cycles. iDUT.ptch = %d", s_data, CONVERGENCE_PERIOD, iDUT.ptch);
   else if(s_cmd == SET_ROLL && iDUT.roll !== s_data)
@@ -166,8 +183,71 @@ task convergence_check(input logic [7:0] s_cmd, input logic [15:0] s_data);
     assert(iDUT.yaw !== 16'b0)
     else $error("[!] iDUT.yaw failed to converge to 0 in %d clk cycles. iDUT.yaw = %d", CONVERGENCE_PERIOD, iDUT.yaw);
     $fatal(1, "[!] E_LAND cmd failed.");
-  end
+  end*/
+  
+  fork
+	begin: converge_timeout
+	  repeat(CONVERGENCE_PERIOD) @(posedge clk);
+	  case(s_cmd)
+		SET_PITCH: begin
+		  $fatal(1, "[!] iDUT.ptch failed to converge to %d in %d clk cycles. iDUT.ptch = %d", s_data, CONVERGENCE_PERIOD, iDUT.ptch);
+		end
+		SET_ROLL: begin
+		  $fatal(1, "[!] iDUT.roll failed to converge to %d in %d clk cycles. iDUT.roll = %d", s_data, CONVERGENCE_PERIOD, iDUT.roll);
+		end
+		SET_YAW: begin
+		  $fatal(1, "[!] iDUT.yaw failed to converge to %d in %d clk cycles. iDUT.yaw = %d", s_data, CONVERGENCE_PERIOD, iDUT.yaw);
+		end
+		E_LAND: begin
+		  assert(abs(iDUT.ptch) < 4)
+		  else begin
+		    $error("[!] iDUT.ptch failed to converge to 0 in %d clk cycles. iDUT.ptch = %d", CONVERGENCE_PERIOD, iDUT.ptch);
+		  end
+		  assert(abs(iDUT.roll) < 4)
+		  else begin 
+		    $error("[!] iDUT.roll failed to converge to 0 in %d clk cycles. iDUT.roll = %d", CONVERGENCE_PERIOD, iDUT.roll);
+		  end
+		  assert(abs(iDUT.yaw) < 4)
+		  else begin
+		    $error("[!] iDUT.yaw failed to converge to 0 in %d clk cycles. iDUT.yaw = %d", CONVERGENCE_PERIOD, iDUT.yaw);
+		  end
+		  $fatal(1, "[!] E_LAND cmd failed.");
+		end
+	  endcase
+	end
+	begin
+	  case(s_cmd)
+	    SET_PITCH: begin
+		  @(posedge ptch_converge);
+		end
+		SET_ROLL: begin
+		  @(posedge roll_converge);
+		end
+		SET_YAW: begin
+		  @(posedge yaw_converge);
+		end
+		E_LAND: begin
+		  fork
+		    begin
+			  @(posedge ptch_converge);
+			end
+			begin
+			  @(posedge roll_converge);
+			end
+			begin
+			  @(posedge yaw_converge);
+			end
+		  join
+		end
+	  endcase
+	  disable converge_timeout;
+	end
+  join
 endtask
+
+assign ptch_converge = (abs(iDUT.ptch - data) < 4) ? 1'b1 : 1'b0;
+assign roll_converge = (abs(iDUT.roll - data) < 4) ? 1'b1 : 1'b0;
+assign yaw_converge = (abs(iDUT.yaw - data) < 4) ? 1'b1 : 1'b0;
 
 task thrust_check(input logic [7:0] s_cmd, input logic [15:0] s_data);
   if(s_cmd == SET_THRST && iDUT.thrst !== {s_data[8:0]})
@@ -186,36 +266,36 @@ initial begin
   repeat(2) @(negedge clk);
   RST_n = 1'b1;
   
+  // CALIBRATE
+  remote_send(CALIBRATE, 16'h0);
+  await_response();
+  //$stop();
+  
   // THRUST
   remote_send(SET_THRST, 16'h00AA);
   await_response();
   thrust_check(SET_THRST, 16'h00AA);
-  $stop();
+  //$stop();
 
   // PITCH
   remote_send(SET_PITCH, 16'h00AA);
   await_response();
   convergence_check(SET_PITCH, 16'h00AA);
-  $stop();
+  //$stop();
 
   // YAW
   remote_send(SET_YAW, 16'h0099);
   await_response();
   convergence_check(SET_YAW, 16'h0099);
-  $stop();
+  //$stop();
 
   // ROLL
   remote_send(SET_ROLL, 16'h0066);
   await_response();
   convergence_check(SET_YAW, 16'h0066);
-  $stop();
+  //$stop();
 
   repeat(1000000) @(posedge clk);
-  $stop();
-
-  // CALIBRATE
-  remote_send(CALIBRATE, 16'h0);
-  await_response();
   $stop();
 end
 

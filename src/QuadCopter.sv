@@ -126,7 +126,7 @@ module QuadCopter(
   /*------------------------------------------------------------------------------
   --  flght_cntrl block: run flight control loops
   ------------------------------------------------------------------------------*/
-  flght_cntrl_pipeline ifly(
+  flght_cntrl ifly(
     .clk(clk),
     .rst_n(rst_n),
 
