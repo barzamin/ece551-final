@@ -48,7 +48,7 @@ module PD_math_pipeline_tb();
 		actual = 16'h2391;
 
 		repeat (10) @(posedge clk);
-		$stop();
+		$finish();
 	end
 
 	always
