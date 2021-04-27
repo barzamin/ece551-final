@@ -112,7 +112,7 @@ class Simulator:
 def ensure_build_dirs():
     builddir.mkdir(exist_ok=True)
     test_out.mkdir(exist_ok=True)
-    (test_out/'coverstore').mkdir(exist_ok=True)
+    (test_out/'coveragedbs').mkdir(exist_ok=True)
     synth_out.mkdir(exist_ok=True)
     (synth_out/'reports').mkdir(exist_ok=True)
 
@@ -157,7 +157,7 @@ def test(args):
             if args.coverage:
                 print(c.OKCYAN + '[-] run recording coverage data' + c.RESET)
 
-                sargs += ['-coverage', '-coverstore', str(test_out/'coverstore'), '-testname', test.stem]
+                sargs += ['-coverage']
 
             Simulator(simlib, test.stem).simulate(*sargs, do=do)
 
@@ -177,7 +177,12 @@ def test(args):
         + (' (' + c.OKCYAN + 'recorded coverage data' + c.OKBLUE + ')' if args.coverage else '') + c.RESET)
 
 def cover(args):
-    subprocess.run([TOOLS['vcover'], 'merge', '-out', str(test_out/'cover.ucdb'), str(test_out/'coverstore')], cwd=str(test_out), check=True)
+    shutil.rmtree(str(test_out/'coverage-report'), ignore_errors=True)
+    subprocess.run([TOOLS['vcover'], 'merge',
+            '-totals',
+            '-out', str(test_out/'cover.ucdb'),
+            str(test_out/'coverstore')],
+        cwd=str(test_out), check=True)
     subprocess.run([TOOLS['vcover'], 'report',
             '-html',
             '-out', str(test_out/'coverage-report'),
