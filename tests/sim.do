@@ -3,22 +3,23 @@ quietly onfinish final
 
 quietly lassign [context du] workpath tbname
 
+set broken 0
 onbreak {
-  lassign [runStatus -full] status fullstat
+  lassign [runStatus -full] status fullstat morestat
   if {$status eq "error"} {
     # Unexpected error, report info and force an error exit
     echo "Error: $fullstat"
     set broken 1
     resume
   } elseif {$status eq "break"} {
-    # If this is a user break, then
-    # issue a prompt to give interactive
-    # control to the user
     if {[string match "user_*" $fullstat]} {
       pause
     } else {
-      # Assertion or other break condition
-      set broken 2
+      # if {$fullstat ne {step_builtin}} {
+      #   cont
+      # } else {
+      #   resume
+      # }
       resume
     }
   } else {
@@ -33,12 +34,12 @@ coverage save -testname "$tbname" "coveragedbs/$tbname.ucdb"
 if {$broken == 1} {
   # Unexpected condition.  Exit with bad status.
   echo "failure"
-  quit -force -code 3
-} elseif {$broken == 2} {
-  # Assertion or other break condition
-  echo "error"
-  quit -force -code 1
-} else {
-  echo "success!"
+  quit -f -code 3
 }
-quit -force
+
+if { [coverage attribute -name TESTSTATUS -concise] != 0} {
+  echo "TESTSTATUS nonzero; errors!"
+  quit -f -code 1
+}
+
+quit -f
