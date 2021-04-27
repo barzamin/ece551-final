@@ -1,35 +1,35 @@
 onerror {resume}
 quietly WaveActivateNextPane {} 0
 add wave -noupdate -divider ESCs
-add wave -noupdate -radix binary /QuadCopter_tb/frnt_ESC
-add wave -noupdate -radix binary /QuadCopter_tb/back_ESC
-add wave -noupdate -radix binary /QuadCopter_tb/left_ESC
-add wave -noupdate -radix binary /QuadCopter_tb/rght_ESC
+add wave -noupdate -radix binary /QuadCopter_tb/TB/frnt_ESC
+add wave -noupdate -radix binary /QuadCopter_tb/TB/back_ESC
+add wave -noupdate -radix binary /QuadCopter_tb/TB/left_ESC
+add wave -noupdate -radix binary /QuadCopter_tb/TB/rght_ESC
 add wave -noupdate -divider {Inertial Sensor Lines}
-add wave -noupdate -radix binary /QuadCopter_tb/SS_n
-add wave -noupdate -radix binary /QuadCopter_tb/INT
-add wave -noupdate -radix binary /QuadCopter_tb/SCLK
-add wave -noupdate -radix binary /QuadCopter_tb/MOSI
-add wave -noupdate -radix binary /QuadCopter_tb/MISO
+add wave -noupdate -radix binary /QuadCopter_tb/TB/SS_n
+add wave -noupdate -radix binary /QuadCopter_tb/TB/INT
+add wave -noupdate -radix binary /QuadCopter_tb/TB/SCLK
+add wave -noupdate -radix binary /QuadCopter_tb/TB/MOSI
+add wave -noupdate -radix binary /QuadCopter_tb/TB/MISO
 add wave -noupdate -divider {Bluetooth Lines}
-add wave -noupdate -radix binary /QuadCopter_tb/RX
-add wave -noupdate -radix binary /QuadCopter_tb/TX
-add wave -noupdate -radix hexadecimal /QuadCopter_tb/resp
-add wave -noupdate -radix binary /QuadCopter_tb/resp_rdy
-add wave -noupdate -radix binary /QuadCopter_tb/clr_resp_rdy
+add wave -noupdate -radix binary /QuadCopter_tb/TB/RX
+add wave -noupdate -radix binary /QuadCopter_tb/TB/TX
+add wave -noupdate -radix hexadecimal /QuadCopter_tb/TB/resp
+add wave -noupdate -radix binary /QuadCopter_tb/TB/resp_rdy
+add wave -noupdate -radix binary /QuadCopter_tb/TB/clr_resp_rdy
 add wave -noupdate -divider {Remote Lines}
-add wave -noupdate -radix hexadecimal /QuadCopter_tb/host_cmd
-add wave -noupdate -radix unsigned /QuadCopter_tb/data
-add wave -noupdate -radix binary /QuadCopter_tb/send_cmd
-add wave -noupdate -radix binary /QuadCopter_tb/cmd_sent
+add wave -noupdate -radix hexadecimal /QuadCopter_tb/TB/host_cmd
+add wave -noupdate -radix unsigned /QuadCopter_tb/TB/data
+add wave -noupdate -radix binary /QuadCopter_tb/TB/send_cmd
+add wave -noupdate -radix binary /QuadCopter_tb/TB/cmd_sent
 add wave -noupdate -divider {Global Signals}
-add wave -noupdate -radix binary /QuadCopter_tb/RST_n
-add wave -noupdate -radix binary /QuadCopter_tb/clk
+add wave -noupdate -radix binary /QuadCopter_tb/TB/RST_n
+add wave -noupdate -radix binary /QuadCopter_tb/TB/clk
 add wave -noupdate -divider {Actual - Pitch/Roll/Yaw/Thrust}
-add wave -noupdate -format Analog-Step -height 74 -max 173.0 -min -1.0 -radix decimal /QuadCopter_tb/iDUT/ptch
-add wave -noupdate -format Analog-Step -height 74 -max 116.0 -min -1.0 -radix decimal /QuadCopter_tb/iDUT/roll
-add wave -noupdate -format Analog-Step -height 74 -max 154.0 -radix decimal /QuadCopter_tb/iDUT/yaw
-add wave -noupdate -radix unsigned /QuadCopter_tb/iDUT/thrst
+add wave -noupdate -format Analog-Step -height 74 -max 173.0 -min -1.0 -radix decimal /QuadCopter_tb/TB/iDUT/ptch
+add wave -noupdate -format Analog-Step -height 74 -max 116.0 -min -1.0 -radix decimal /QuadCopter_tb/TB/iDUT/roll
+add wave -noupdate -format Analog-Step -height 74 -max 154.0 -radix decimal /QuadCopter_tb/TB/iDUT/yaw
+add wave -noupdate -radix unsigned /QuadCopter_tb/TB/iDUT/thrst
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {282855770 ps} 0}
 quietly wave cursor active 1
