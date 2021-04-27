@@ -13,19 +13,20 @@
 module inert_intf
 #(parameter FAST_SIM = 1)
 (
-  input clk, rst_n, // global clock and active-low asynch reset
-  input MISO,       // SPI input from inertial sensor
-  input INT,        // goes high when measurement ready
-  input strt_cal,   // from comand config.  Indicates we should start calibration
+  input wire clk, rst_n, // global clock and active-low asynch reset
+  input wire MISO,       // SPI input from inertial sensor
+  input wire INT,        // goes high when measurement ready
+  input wire strt_cal,   // from comand config.  Indicates we should start calibration
 
-  output signed [15:0] ptch,roll,yaw, // fusion corrected angles
-  output cal_done,                    // indicates calibration is done
-  output reg vld,                     // goes high for 1 clock when new outputs available
-  output SS_n,SCLK,MOSI               // SPI outputs
+  output wire signed [15:0] ptch,roll,yaw, // fusion corrected angles
+  output wire cal_done,                    // indicates calibration is done
+  output reg vld,                          // goes high for 1 clock when new outputs available
+  output wire SS_n,SCLK,MOSI               // SPI outputs
 );
 
   // Internal signals
   logic INT_1, INT_2;
+  logic done;
   logic [15:0] cnt;
   reg[15:0] ptch_reg, roll_reg, yaw_reg, ax_reg, ay_reg;
 

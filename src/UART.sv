@@ -1,11 +1,11 @@
 module UART(
-  input clk,rst_n,          // clock and active low reset
-  input RX,trmt,            // strt_tx tells TX section to transmit tx_data
-  input clr_rx_rdy,         // rx_rdy can be cleared by this or new start bit
-  input [7:0] tx_data,      // byte to transmit
-  output TX,rx_rdy,tx_done, // rx_rdy asserted when byte received,
-                            // tx_done asserted when tranmission complete
-  output [7:0] rx_data      // byte received
+  input wire clk,rst_n,          // clock and active low reset
+  input wire RX,trmt,            // strt_tx tells TX section to transmit tx_data
+  input wire clr_rx_rdy,         // rx_rdy can be cleared by this or new start bit
+  input wire [7:0] tx_data,      // byte to transmit
+  output wire TX,rx_rdy,tx_done, // rx_rdy asserted when byte received,
+                                 // tx_done asserted when tranmission complete
+  output wire [7:0] rx_data      // byte received
 );
 
   //////////////////////////////

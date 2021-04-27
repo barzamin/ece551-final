@@ -2,6 +2,7 @@
 read_file -format sverilog { {{sources|join(' ')}} }
 # main unit is QuadCopter
 current_design QuadCopter
+link
 
 ## -- configure clock
 create_clock -name "clk" -period 3.75 { clk }

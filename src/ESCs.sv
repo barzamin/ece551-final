@@ -1,20 +1,20 @@
 module ESCs (
-  input clk, rst_n,
+  input wire clk, rst_n,
 
-  input [10:0] frnt_spd, // speed of front motor from PD_math
-  input [10:0] bck_spd,  // speed of back motor from PD_math
-  input [10:0] lft_spd,  // speed of left motor from PD_math
-  input [10:0] rght_spd, // speed of right motor from PD_math
+  input wire [10:0] frnt_spd, // speed of front motor from PD_math
+  input wire [10:0] bck_spd,  // speed of back motor from PD_math
+  input wire [10:0] lft_spd,  // speed of left motor from PD_math
+  input wire [10:0] rght_spd, // speed of right motor from PD_math
 
-  input motors_off, // signal to turn off motors from cmd_cnfg
-  input wrt,        // wrt signal for ESC_interfaces from ?????
-                    // vld from inert_intf?
-                    // wouldn't vld start the pulse with different data
+  input wire motors_off, // signal to turn off motors from cmd_cnfg
+  input wire wrt,        // wrt signal for ESC_interfaces from ?????
+                         // vld from inert_intf?
+                         // wouldn't vld start the pulse with different data
 
-  output frnt, // PWM pulse sent to front motor
-  output bck,  // PWM pulse sent to back motor
-  output lft,  // PWM pulse sent to left motor
-  output rght  // PWM pulse sent to right motor
+  output wire frnt, // PWM pulse sent to front motor
+  output wire bck,  // PWM pulse sent to back motor
+  output wire lft,  // PWM pulse sent to left motor
+  output wire rght  // PWM pulse sent to right motor
 );
 
   // Internal signals

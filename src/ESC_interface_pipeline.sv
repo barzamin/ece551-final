@@ -1,9 +1,9 @@
-module ESC_interface (
-  input clk,          // clock
-  input rst_n,        // asynchronous reset active low
-  input wrt,          // init a pulse
-  input [10:0] SPEED, // speed input
-  output reg PWM      // esc control output
+module ESC_interface_pipeline (
+  input wire clk,          // clock
+  input wire rst_n,        // asynchronous reset active low
+  input wire wrt,          // init a pulse
+  input wire [10:0] SPEED, // speed input
+  output reg PWM           // esc control output
 );
 
   // Intermediate wire declarations

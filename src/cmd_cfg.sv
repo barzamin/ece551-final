@@ -1,14 +1,14 @@
 module cmd_cfg
 #(parameter FAST_SIM = 1)
 (
-  input clk, rst_n,  // Clock and global reset
-  input cmd_rdy,     // Indicates the UART has a new command
-  input [7:0] cmd,   // Command opcode from UART
-  input [15:0] data, // Command data from UART
-  input cal_done,    // Indicates interial calibration is complete
+  input wire clk, rst_n,  // Clock and global reset
+  input wire cmd_rdy,     // Indicates the UART has a new command
+  input wire [7:0] cmd,   // Command opcode from UART
+  input wire [15:0] data, // Command data from UART
+  input wire cal_done,    // Indicates interial calibration is complete
 
   output reg clr_cmd_rdy,                  // clrs cmd_rdy after cmd_cfg digested command
-  output [7:0] resp,                       // response back to remote, typically pos_ack(0xA5),
+  output wire [7:0] resp,                  // response back to remote, typically pos_ack(0xA5),
   output reg send_resp,                    // indicates UART_comm should send response byte
   output reg [15:0] d_ptch, d_roll, d_yaw, // desired pitch, roll, yaw as 16-bit signed numbers
   output reg [8:0] thrst,                  // 9-bit unsigned thrust level, goes to flight_cntrl

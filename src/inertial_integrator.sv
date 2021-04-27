@@ -1,15 +1,16 @@
+
 module inertial_integrator(clk,rst_n,strt_cal,cal_done,vld,ptch_rt,roll_rt,yaw_rt,
                            ax,ay,ptch,roll,yaw);
 						   
 parameter FAST_SIM = 1;		// used for speeding up simulations.
 
-input clk, rst_n;
-input strt_cal;						// goes high to initiate calibration
-input vld;							// goes high for 1 clock cycle when new data valid
-input signed [15:0] ptch_rt, roll_rt, yaw_rt;		// raw gyro rate readings from inert_intf
-input signed [15:0] ax,ay;							// raw accel readings from inert_intf
-output logic cal_done;				// asserted when calibration is completed
-output signed [15:0] ptch, roll, yaw;
+input wire clk, rst_n;
+input wire strt_cal;						// goes high to initiate calibration
+input wire vld;							// goes high for 1 clock cycle when new data valid
+input reg signed [15:0] ptch_rt, roll_rt, yaw_rt;		// raw gyro rate readings from inert_intf
+input reg signed [15:0] ax,ay;							// raw accel readings from inert_intf
+output reg cal_done;				// asserted when calibration is completed
+output reg signed [15:0] ptch, roll, yaw;
 
   ////////////////////////////////////////////////////////
   // Internal registers (pipelined for timing reasons) //

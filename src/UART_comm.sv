@@ -1,15 +1,16 @@
+`default_nettype none
 module UART_comm (
-  input clk, rst_n,  // clock and active low reset
-  input RX,          // serial data input
-  input send_resp,   // indicates to transmit 8-bit data (resp)
-  input [7:0] resp,  // byte to transmit
-  input clr_cmd_rdy, // host asserts when command digested
+  input wire logic clk, rst_n,  // clock and active low reset
+  input wire logic RX,          // serial data input
+  input wire logic send_resp,   // indicates to transmit 8-bit data (resp)
+  input wire logic [7:0] resp,  // byte to transmit
+  input wire logic clr_cmd_rdy, // host asserts when command digested
 
-  output TX,               // serial data output
-  output resp_sent,        // indicates transmission of response complete
-  output logic cmd_rdy,    // indicates 24-bit command has been received
-  output logic [7:0] cmd,  // 8-bit opcode sent from host via BLE
-  output logic [15:0] data // 16-bit parameter sent LSB first via BLE
+  output wire logic TX,        // serial data output
+  output wire logic resp_sent, // indicates transmission of response complete
+  output reg cmd_rdy,     // indicates 24-bit command has been received
+  output reg [7:0] cmd,   // 8-bit opcode sent from host via BLE
+  output reg [15:0] data  // 16-bit parameter sent LSB first via BLE
 );
 
   wire [7:0] rx_data; // 8-bit data received from UART
