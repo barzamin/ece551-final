@@ -10,7 +10,7 @@
 --    * Isaac Colbert
 --  Term: Spring 2021
 ------------------------------------------------------------------------------*/
-module Quadcopter_calibrate_off_tb();
+module QuadCopter_calibrate_off_tb();
 
 QuadCopter_tb_shared TB();
 
@@ -32,7 +32,7 @@ initial begin
   TB.await_response();
 
   assert(TB.iDUT.motors_off === 1'b1)
-  else $fatal(1, "motors_off is not asserted after a MOTORS_OFF command.")
+  else $fatal(1, "motors_off is not asserted after a MOTORS_OFF command.");
 
   TB.remote_send(TB.CALIBRATE, 16'h0);
 
