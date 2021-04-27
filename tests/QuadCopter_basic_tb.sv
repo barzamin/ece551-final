@@ -10,7 +10,7 @@
 --    * Isaac Colbert
 --  Term: Spring 2021
 ------------------------------------------------------------------------------*/
-module QuadCopter_tb();
+module QuadCopter_basic_tb();
 
 // Instantiate the shared testbench.
 QuadCopter_tb_shared TB();
@@ -18,16 +18,6 @@ QuadCopter_tb_shared TB();
 initial begin
   // Wait for the shared testbench to be ready.
   @(posedge TB.TB_ready);
-  TB.clk = 1'b0;
-  TB.RST_n = 1'b0;
-
-  TB.send_cmd = 1'b0;
-  TB.clr_resp_rdy = 1'b0;
-  TB.host_cmd = 8'b0;
-  TB.data = 16'b0;
-
-  repeat(2) @(negedge TB.clk);
-  TB.RST_n = 1'b1;
 
   // CALIBRATE
   TB.remote_send(TB.CALIBRATE, 16'h0);
