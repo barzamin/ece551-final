@@ -145,9 +145,10 @@ def test(args):
         print(c.BOLD + c.FAIL + '[#] failed to build models and/or testbenches. dying')
         exit(1)
 
-    passed = 0
+    failed = []
     for test in tests:
         print(c.HEADER + '[-] running test {}'.format(test.stem) + c.RESET)
+        bad = True
         try:
             sargs = []
             do = None
@@ -159,9 +160,9 @@ def test(args):
                 sargs += ['-coverage']
 
             Simulator(simlib, test.stem).simulate(*sargs, do=do)
+            bad = False
 
             print(c.BOLD + c.OKGREEN + '[*] test passed' + c.RESET)
-            passed += 1
         except VsimAssertionFail as e:
             print(c.BOLD + c.FAIL + '[!] test failed: assertion failed' + c.RESET)
         except VsimElaborationError as e:
@@ -171,9 +172,15 @@ def test(args):
         except VsimUnknownStatusCode as e:
             print(c.FAIL + '[!] unknown vsim return code {}'.format(e.statuscode) + c.RESET)
 
-    print(c.OKBLUE + '-'*32 + c.RESET)
-    print(c.OKBLUE + '[&] {}/{} tests passed'.format(passed, len(tests))
+        if bad:
+            failed.append(test.stem)
+
+    print(c.HEADER + '-'*32 + c.RESET)
+    print(c.OKBLUE + '[&] {}/{} tests passed'.format(len(tests)-len(failed), len(tests))
         + (' (' + c.OKCYAN + 'recorded coverage data' + c.OKBLUE + ')' if args.coverage else '') + c.RESET)
+    for failure in failed:
+        print(c.FAIL + '[!] {} failed'.format(failure) + c.RESET)
+
 
 def cover(args):
     shutil.rmtree(str(test_out/'coverage-report'), ignore_errors=True)
