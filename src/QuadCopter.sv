@@ -60,7 +60,7 @@ module QuadCopter(
 
   `ifdef DC // Design Compiler sets DC
     localparam FAST_SIM = 0; // synthesize the full thing
-  `elsif
+  `else
     localparam FAST_SIM = 1; // used to accelerate simulations.
   `endif
 
