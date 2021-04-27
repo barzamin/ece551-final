@@ -1,18 +1,29 @@
-module flght_cntrl_pipeline(clk,rst_n,vld,inertial_cal,d_ptch,d_roll,d_yaw,ptch,
-          roll,yaw,thrst,frnt_spd,bck_spd,lft_spd,rght_spd);
-
-  input clk,rst_n;
-  input vld;  // tells when a new valid inertial reading ready
-              // only update D_QUEUE on vld readings
-  input inertial_cal;                      // need to run motors at CAL_SPEED during inertial calibration
-  input signed [15:0] d_ptch,d_roll,d_yaw; // desired pitch roll and yaw (from cmd_cfg)
-  input signed [15:0] ptch,roll,yaw;       // actual pitch roll and yaw (from inertial interface)
-  input [8:0] thrst;                       // thrust level from slider
-  output [10:0] frnt_spd;                  // 11-bit unsigned speed at which to run front motor
-  output [10:0] bck_spd;                   // 11-bit unsigned speed at which to back front motor
-  output [10:0] lft_spd;                   // 11-bit unsigned speed at which to left front motor
-  output [10:0] rght_spd;                  // 11-bit unsigned speed at which to right front motor
-
+`default_nettype none
+/*------------------------------------------------------------------------------
+--  Calculates the speed at which to drive each motor from the desired
+--  pitch/roll/yaw, actual pitch/roll/yaw, and thrust level. Also
+--  runs the motors at the correct speed for calibration.
+--
+--  Team: MEI
+--  Authors:
+--    * Mitchell Kitzinger
+--    * Erin Marshall
+--    * Isaac Colbert
+--  Term: Spring 2021
+------------------------------------------------------------------------------*/
+module flght_cntrl(
+  input wire clk,
+  input wire rst_n,
+  input wire vld,                                  // tells when a new valid inertial reading ready to update D_QUEUE with
+  input wire inertial_cal,                         // need to run motors at CAL_SPEED during inertial calibration
+  input wire signed [15:0] d_ptch, d_roll, d_yaw,  // desired pitch roll and yaw (from cmd_cfg)
+  input wire signed [15:0] ptch, roll, yaw,        // actual pitch roll and yaw (from inertial interface)
+  input wire [8:0] thrst,                          // thrust level from slider
+  output wire [10:0] frnt_spd,                     // 11-bit unsigned speed at which to run front motor
+  output wire [10:0] bck_spd,                      // 11-bit unsigned speed at which to run back motor
+  output wire [10:0] lft_spd,                      // 11-bit unsigned speed at which to run left motor
+  output wire [10:0] rght_spd                      // 11-bit unsigned speed at which to run right motor
+);
 
   //////////////////////////////////////////////////////
   // You will need a bunch of interal wires declared //
