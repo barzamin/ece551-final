@@ -37,7 +37,7 @@ module QuadCopter(
   wire [7:0] resp;      // response to wireless
   wire send_resp;       // asserted to send response to wireless
   wire resp_sent;       // indicates response to wireless has been sent
-
+  
   wire vld;                  // goes high one clock cycle when new inertial measurement
   wire signed [15:0] ptch;   // current pitch
   wire signed [15:0] roll;   // current roll
@@ -52,13 +52,22 @@ module QuadCopter(
   wire inertial_cal; // indicates calibration in progress to flght_control
   wire motors_off;   // to flight control, forces motors off
   wire cal_done;     // from inertial_intf to cmd_cfg
-
+  
   wire [10:0] frnt_spd; // front motor speed from flght_cntrl
   wire [10:0] bck_spd;  // front motor speed from flght_cntrl
   wire [10:0] lft_spd;  // front motor speed from flght_cntrl
   wire [10:0] rght_spd; // front motor speed from flght_cntrl
-
+<<<<<<< HEAD
+  
   localparam FAST_SIM = 1;      // used to accelerate simulations.
+=======
+
+  `ifdef DC // Design Compiler sets DC
+    localparam FAST_SIM = 0; // synthesize the full thing
+  `else
+    localparam FAST_SIM = 1; // used to accelerate simulations.
+  `endif
+>>>>>>> 78b77829e6923fca98e54dad19daa7d4cb80a4d3
 
   /*------------------------------------------------------------------------------
   --  UART_comm block: handling quad <-> host BLE communication
@@ -126,7 +135,7 @@ module QuadCopter(
   /*------------------------------------------------------------------------------
   --  flght_cntrl block: run flight control loops
   ------------------------------------------------------------------------------*/
-  flght_cntrl ifly(
+  flght_cntrl_pipeline ifly(
     .clk(clk),
     .rst_n(rst_n),
 
