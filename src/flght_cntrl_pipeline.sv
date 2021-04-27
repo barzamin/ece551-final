@@ -11,7 +11,7 @@
 --    * Isaac Colbert
 --  Term: Spring 2021
 ------------------------------------------------------------------------------*/
-module flght_cntrl(
+module flght_cntrl_pipeline(
   input wire clk,
   input wire rst_n,
   input wire vld,                                  // tells when a new valid inertial reading ready to update D_QUEUE with
