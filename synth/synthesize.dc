@@ -2,8 +2,6 @@
 read_file -format sverilog { {{sources|join(' ')}} }
 # main unit is QuadCopter
 current_design QuadCopter
-# make sure hierarchy is loaded
-link
 
 ## -- configure clock
 create_clock -name "clk" -period 3.75 { clk }
@@ -21,8 +19,7 @@ set_dont_touch_network [get_net iRST/rst_n]
 ## -- set up input delays and drives
 # 0.25ns input delay
 set_input_delay -clock clk 0.25 [copy_collection $prim_inputs]
-set_driving_cell -lib_cell NAND2X2_RVT -library saed32rvt_tt0p85v25c [copy_collection [remove_from_collection $prim_inputs [find port rst_n]]]
-set_drive 0.1 [find port rst_n]
+set_driving_cell -lib_cell NAND2X2_RVT -library saed32rvt_tt0p85v25c [copy_collection $prim_inputs]
 
 ## -- set up output delays and loads
 # 0.5ns output delay (prior to rise)
@@ -37,8 +34,8 @@ set_wire_load_model -name 16000 -library saed32rvt_tt0p85v25c
 set_max_transition 0.15 [current_design]
 
 ## -- initial compile and DRC check
-check_design
-compile
+check_design > reports/drc.txt
+compile -map_effort medium
 
 ## -- smash DW components
 ungroup -all -flatten
@@ -47,8 +44,8 @@ ungroup -all -flatten
 set_fix_hold clk
 
 ## -- recompile flattened
-check_design
-check_design
+compile -map_effort medium
+compile -map_effort high
 
 ## -- reports
 report_timing -path full -delay max -nworst 3 > reports/max_worst.timing.txt
@@ -56,7 +53,6 @@ report_timing -path full -delay min -nworst 3 > reports/min_worst.timing.txt
 report_area > reports/area.txt
 report_register > reports/registers.txt
 report_register -level_sensitive > reports/latches.txt
-check_design > reports/drc.txt
 
 ## -- writeout netlist
 write -format verilog -output QuadCopter.vg QuadCopter
