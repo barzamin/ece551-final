@@ -7,7 +7,6 @@ module PD_math (
   output wire logic signed [11:0] dterm, // 12-bit signed dterm = sat7(D_diff) * DTERM
   output wire logic signed [9 :0] pterm  // 10-bit signed pterm = 5/8 * err_sat
 );
-
 	localparam DTERM = 5'b00111;
 	localparam D_QUEUE_DEPTH = 12;
 
