@@ -30,4 +30,7 @@ vsim.dbg
 *.vcd
 *.fst
 
+# ignore old waveform format
+tests/QuadCopter_TB_wave.do
+
 build/
