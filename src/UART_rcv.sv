@@ -1,20 +1,23 @@
-module UART_rcv(clk, rst_n, RX, clr_rdy, rx_data, rdy);
-	
-	input clk, rst_n, RX, clr_rdy;
-	output reg rdy;
-	output [7:0] rx_data;
-	
+module UART_rcv (
+  input logic clk,
+  input logic rst_n,   // async reset active low
+  input logic RX,      // RX line in
+  input logic clr_rdy, // clear ready bit
+  output logic rdy,    // is output ready
+  output logic [7:0] rx_data // received byte
+);
+
 	// intermediate declarations
 	logic init, receiving, shift, set_rdy;
 	logic [8:0] rx_shift_reg;
 	logic [11:0] baud_cnt;
 	logic [3:0] bit_cnt;
 	logic RX_q1, RX_q2;
-	
+
 	// state declarations
 	typedef enum reg {IDLE, REC} state_t;
 	state_t state, nxt_state;
-	
+
 	// state machine
 	always_ff @(posedge clk, negedge rst_n) begin
 		if (!rst_n)
@@ -22,7 +25,7 @@ module UART_rcv(clk, rst_n, RX, clr_rdy, rx_data, rdy);
 		else
 			state <= nxt_state;
 	end
-	
+
 	// state machine combinational logic
 	always_comb begin
 		//// Default outputs ////
@@ -30,7 +33,7 @@ module UART_rcv(clk, rst_n, RX, clr_rdy, rx_data, rdy);
 		receiving = 0;
 		set_rdy = 0;
 		nxt_state = state;
-		
+
 		case(state)
 			REC: if (bit_cnt == 10) begin
 				set_rdy = 1'b1;
@@ -48,7 +51,7 @@ module UART_rcv(clk, rst_n, RX, clr_rdy, rx_data, rdy);
 			end
 		endcase
 	end
-	
+
 	// Double flop RX for metastability
 	always_ff @(posedge clk, negedge rst_n) begin
 		if (!rst_n) begin
@@ -59,7 +62,7 @@ module UART_rcv(clk, rst_n, RX, clr_rdy, rx_data, rdy);
 			RX_q2 <= RX_q1;
 		end
 	end;
-	
+
 	// Shift Register logic
 	always_ff @(posedge clk, negedge rst_n) begin
 		if (!rst_n) begin
@@ -71,10 +74,10 @@ module UART_rcv(clk, rst_n, RX, clr_rdy, rx_data, rdy);
 	// RX comes into msb, so assign rx_data to lower 8 bits of
 	// the shift register to get data and avoid stop bit_cnt
 	assign rx_data = rx_shift_reg[7:0];
-	
+
 	// Baud counter
 	always_ff @(posedge clk) begin
-		// Choose whether using 1/2 period or full depending on if 
+		// Choose whether using 1/2 period or full depending on if
 		// init is asserted
 		if (init) begin
 			baud_cnt <= 12'h516;
@@ -84,10 +87,10 @@ module UART_rcv(clk, rst_n, RX, clr_rdy, rx_data, rdy);
 			baud_cnt <= baud_cnt - 1;
 		end
 	end
-	
+
 	// Compare baud_cnt to 0 to determine if period is over
 	assign shift = (|baud_cnt == 0) ? 1'b1 : 1'b0;
-	
+
 	// Bit Counter
 	always_ff @(posedge clk) begin
 		if (init) begin
@@ -96,7 +99,7 @@ module UART_rcv(clk, rst_n, RX, clr_rdy, rx_data, rdy);
 			bit_cnt <= bit_cnt + 1;
 		end
 	end
-	
+
 	// Output logic and flop
 	always_ff @(posedge clk, negedge rst_n) begin
 		if (!rst_n)

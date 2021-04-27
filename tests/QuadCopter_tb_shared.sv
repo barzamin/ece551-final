@@ -32,14 +32,14 @@ localparam SET_ROLL 	= 8'h03;
 localparam SET_YAW		= 8'h04;
 localparam SET_THRST	= 8'h05;
 localparam CALIBRATE	= 8'h06;
-localparam E_LAND		= 8'h07;
+localparam E_LAND		  = 8'h07;
 localparam MOTORS_OFF	= 8'h08;
 
 // Parameters for timeouts and convergence margin.
 localparam RESP_WAIT_TIMEOUT_CYCLES  = 1000000;
 localparam CALIBRATE_TIMEOUT_CYCLES  = 1000;
 localparam CMD_RDY_TIMEOUT_CYCLES    = 1000000;
-localparam CONVERGENCE_PERIOD_CYCLES = 100000000;
+localparam CONVERGENCE_PERIOD_CYCLES = 20000000; // 20000000 * 10 ps = 200mil PS
 localparam CONVERGENCE_MARGIN        = 10;
 
 // Convergence signals

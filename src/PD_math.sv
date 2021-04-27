@@ -1,11 +1,11 @@
 module PD_math (
-  input wire logic clk,   // clock
-  input wire logic rst_n, // reset (active low)
-  input wire logic vld, // new inertial sensor reading is valid
-  input wire logic [15:0] desired, // desired output
-  input wire logic [15:0] actual, // actual output
-  output wire logic signed [11:0] dterm, // 12-bit signed dterm = sat7(D_diff) * DTERM
-  output wire logic signed [9 :0] pterm  // 10-bit signed pterm = 5/8 * err_sat
+  input wire logic clk,                   // clock
+  input wire logic rst_n,                 // reset (active low)
+  input wire logic vld,                   // new inertial sensor reading is valid
+  input wire logic [15:0] desired,        // desired output
+  input wire logic [15:0] actual,         // actual output
+  output wire logic signed [11:0] dterm,  // 12-bit signed dterm = sat7(D_diff) * DTERM
+  output wire logic signed [9 :0] pterm   // 10-bit signed pterm = 5/8 * err_sat
 );
 	localparam DTERM = 5'b00111;
 	localparam D_QUEUE_DEPTH = 12;
@@ -13,7 +13,7 @@ module PD_math (
 	logic [16:0] err;
 	logic [9:0] err_sat, D_diff;
 	logic [6:0] D_diff_sat;
-	reg [9:0] prev_err[0:D_QUEUE_DEPTH-1];
+	reg [9:0] prev_err [0:D_QUEUE_DEPTH-1];
 	logic [9:0] err_sat_half, err_sat_eighth;
 	genvar i;
 
@@ -21,8 +21,8 @@ module PD_math (
 
 	// Saturate err to 10 bits
 	assign err_sat = (err[16]) ?
-						((&err[15:9] == 0) ? 10'h200 : err[9:0]) :
-						((|err[15:9]) ? 10'h1ff : err[9:0]);
+  ((&err[15:9] == 0) ? 10'h200 : err[9:0]):
+  ((|err[15:9]) ? 10'h1ff : err[9:0]);
 
 	//////////////////////////////////////////////
 	// Parametizable Queue depth for Derivative //

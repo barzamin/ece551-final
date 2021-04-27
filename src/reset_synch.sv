@@ -1,12 +1,12 @@
-module reset_synch(RST_n, clk, rst_n);
-	
-	// Inputs and outputs
-	input RST_n, clk;
-	output reg rst_n;
-	
+module reset_synch (
+  input logic RST_n, // raw reset input
+  input logic clk,   // clock
+  output reg rst_n   // synchronized reset
+);
+
 	// Internal signals
 	logic q1;
-	
+
 	// 2 negative edge controlled flops
 	always_ff @(negedge clk, negedge RST_n) begin
 		if (!RST_n) begin
