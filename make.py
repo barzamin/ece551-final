@@ -136,9 +136,8 @@ def test(args):
             bargs += ['+cover=bcestf', '-coveropt', '3']
         simlib.build(src['rtl'], *bargs)
     except Exception as e:
-        # print(c.BOLD + c.FAIL + '[#] failed to build DUT RTL. dying')
-        # exit(1)
-        raise e
+        print(c.BOLD + c.FAIL + '[#] failed to build DUT RTL. dying')
+        exit(1)
 
     try:
         simlib.build(src['models'] + src['testbenches'])

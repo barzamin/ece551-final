@@ -1,10 +1,10 @@
 module UART_tx (
   input logic clk,
-  input logic rst_n,   // async reset active low
-  input logic trmt,    // assert high to txmit
+  input logic rst_n,         // async reset active low
+  input logic trmt,          // assert high to txmit
   input logic [7:0] tx_data, // data to tx
-  output reg tx_done, // tx done
-  output logic TX      // tx output
+  output reg tx_done,        // tx done
+  output logic TX            // tx output
 );
 
 	// Intermediate declarations

@@ -1,9 +1,9 @@
 module PD_math_pipeline (
-  input wire clk,   // clock
-  input wire rst_n, // reset (active low)
-  input wire vld, // new inertial sensor reading is valid
+  input wire clk,            // clock
+  input wire rst_n,          // reset (active low)
+  input wire vld,            // new inertial sensor reading is valid
   input wire [15:0] desired, // desired output
-  input wire [15:0] actual, // actual output
+  input wire [15:0] actual,  // actual output
 
   output reg signed [11:0] dterm, // 12-bit signed dterm = sat7(D_diff) * DTERM
   output reg signed [9 :0] pterm  // 10-bit signed pterm = 5/8 * err_sat
