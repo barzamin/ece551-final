@@ -65,6 +65,9 @@ module RemoteComm(clk, rst_n, RX, TX, cmd, data, send_cmd, cmd_sent, resp_rdy, r
     select = 2'b00;
     trmt = 1'b0;
     done = 1'b0;
+
+    // this next_state defaulting to prevent a latch was done as the result of seeing weirdly
+    // low FSM transition coverage in the QuestaSim coverage reports.
     next_state = IDLE;
     case(state)
       IDLE: begin
