@@ -45,7 +45,7 @@ localparam CONVERGENCE_MARGIN        = 10;
 // Convergence signals
 logic ptch_converge, roll_converge, yaw_converge;
 
-// Signals that the main TB is ready to begin.
+// Signals that the this TB is ready to begin.
 logic TB_ready;
 
 ////////////////////////////////////////////////////////////////
