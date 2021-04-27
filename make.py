@@ -46,7 +46,7 @@ TOOLS = {
 src = {
     'rtl': list(srcdir.glob('*.sv')),
     'models': list((srcdir/'models').glob('*.sv')),
-    'testbenches': list(testdir.glob('*_tb.sv'))
+    'testbenches': list(testdir.glob('*.sv'))
 }
 
 
@@ -130,13 +130,13 @@ def test(args):
         shutil.copy(str(p), str(questa_out))
 
     if args.test == []:
-        tests = src['testbenches']
+        tests = [p for p in src['testbenches'] if p.stem.endswith('_tb')]
     else:
         tests = [testdir / '{}.sv'.format(t) for t in args.test]
 
     simlib = Library('ece551tb', basedir=questa_out)
     try:
-        simlib.build(src['rtl'] + src['models'] + tests)
+        simlib.build(src['rtl'] + src['models'] + src['testbenches'])
     except Exception as e:
         print(c.BOLD + c.FAIL + '[#] failed to build testbench source. dying')
         exit(1)
