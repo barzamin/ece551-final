@@ -5,8 +5,8 @@ module PD_math_pipeline (
   input wire logic [15:0] desired, // desired output
   input wire logic [15:0] actual, // actual output
 
-  output wire logic signed [11:0] dterm, // 12-bit signed dterm = sat7(D_diff) * DTERM
-  output wire logic signed [9 :0] pterm  // 10-bit signed pterm = 5/8 * err_sat
+  output logic signed [11:0] dterm, // 12-bit signed dterm = sat7(D_diff) * DTERM
+  output logic signed [9 :0] pterm  // 10-bit signed pterm = 5/8 * err_sat
 );
   localparam DTERM = 5'b00111;
   localparam D_QUEUE_DEPTH = 12;

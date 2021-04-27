@@ -57,17 +57,12 @@ module QuadCopter(
   wire [10:0] bck_spd;  // front motor speed from flght_cntrl
   wire [10:0] lft_spd;  // front motor speed from flght_cntrl
   wire [10:0] rght_spd; // front motor speed from flght_cntrl
-<<<<<<< HEAD
-  
-  localparam FAST_SIM = 1;      // used to accelerate simulations.
-=======
 
   `ifdef DC // Design Compiler sets DC
     localparam FAST_SIM = 0; // synthesize the full thing
   `else
     localparam FAST_SIM = 1; // used to accelerate simulations.
   `endif
->>>>>>> 78b77829e6923fca98e54dad19daa7d4cb80a4d3
 
   /*------------------------------------------------------------------------------
   --  UART_comm block: handling quad <-> host BLE communication
