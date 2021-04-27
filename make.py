@@ -25,7 +25,7 @@ testdir = basedir / 'tests'
 builddir = basedir / 'build'
 simscript = testdir / 'sim.do'
 
-questa_out = builddir/'questa'
+test_out = builddir/'questa'
 synth_out = builddir/'synth'
 
 QUESTA_BASE = Path('/cae/apps/data/mentor-2020/questasim')
@@ -37,9 +37,10 @@ QUESTA_ENVVARS = {
     'PATH': os.getenv('PATH'),
 }
 TOOLS = {
-    'vsim': str(QUESTA_BIN / 'vsim'),
-    'vlib': str(QUESTA_BIN / 'vlib'),
-    'vlog': str(QUESTA_BIN / 'vlog'),
+    'vsim':   str(QUESTA_BIN / 'vsim'),
+    'vlib':   str(QUESTA_BIN / 'vlib'),
+    'vlog':   str(QUESTA_BIN / 'vlog'),
+    'vcover': str(QUESTA_BIN / 'vcover'),
     'design_vision': '/cae/apps/bin/design_vision', # this CAE spoofscript properly loads licensing and process libraries
 }
 
@@ -61,14 +62,12 @@ class Library:
         except subprocess.CalledProcessError as error:
             raise Exception('failed to create questasim library: {}'.format(error.output))
 
-    def build(self, sources):
-        try:
-            subprocess.run([TOOLS['vlog'],
-                '-work', self.name,
-                *map(str, sources)],
-                cwd=self.basedir, check=True, env=QUESTA_ENVVARS)
-        except subprocess.CalledProcessError as error:
-            raise Exception('failed to compile test source: {}'.format(error.output))
+    def build(self, sources, *args):
+        subprocess.run([TOOLS['vlog'],
+            '-work', self.name,
+            *args,
+            *map(str, sources)],
+            cwd=self.basedir, check=True, env=QUESTA_ENVVARS)
 
 class VsimAssertionFail(Exception): pass
 class VsimUnexpectedError(Exception): pass
@@ -98,27 +97,22 @@ class Simulator:
             else:
                 raise VsimUnknownStatusCode(err.returncode)
 
-    def _exec(self, *args, dump_all=False, vcd_all=False):
-        do = ''
-        if dump_all:
-            do += 'add log -r sim:/*; '
-        if vcd_all:
-            do += 'vcd file {}.vcd; vcd add -r sim:/*; '.format(self.toplevel)
-
-        do += 'do {}'.format(str(simscript))
+    def _exec(self, *args, do=None):
+        do = do or ''
+        do += ';do {}'.format(str(simscript))
         return subprocess.run([TOOLS['vsim'], '-batch',
-                '-wlf', '{}.wlf'.format(self.toplevel),
                 '-work', self.library.name,
                 '-vopt', '-voptargs=+acc',
                 '-do', do,
                 *args,
                 '{}.{}'.format(self.library.name, self.toplevel)],
-            cwd=str(questa_out),
+            cwd=str(test_out),
             check=True, env=QUESTA_ENVVARS)
 
 def ensure_build_dirs():
     builddir.mkdir(exist_ok=True)
-    questa_out.mkdir(exist_ok=True)
+    test_out.mkdir(exist_ok=True)
+    (test_out/'coverstore').mkdir(exist_ok=True)
     synth_out.mkdir(exist_ok=True)
     (synth_out/'reports').mkdir(exist_ok=True)
 
@@ -127,26 +121,46 @@ def test(args):
 
     # copy test data
     for p in testdir.glob('*.hex'):
-        shutil.copy(str(p), str(questa_out))
+        shutil.copy(str(p), str(test_out))
 
     if args.test == []:
         tests = [p for p in src['testbenches'] if p.stem.endswith('_tb')]
     else:
         tests = [testdir / '{}.sv'.format(t) for t in args.test]
 
-    simlib = Library('ece551tb', basedir=questa_out)
+    simlib = Library('ece551tb', basedir=test_out)
     try:
-        simlib.build(src['rtl'] + src['models'] + src['testbenches'])
+        bargs = []
+        if args.coverage:
+            print(c.OKCYAN + '[-] building DUT with coverage enabled' + c.RESET)
+            bargs += ['+cover=bcestf', '-coveropt', '3']
+        simlib.build(src['rtl'], *bargs)
     except Exception as e:
-        print(c.BOLD + c.FAIL + '[#] failed to build testbench source. dying')
+        # print(c.BOLD + c.FAIL + '[#] failed to build DUT RTL. dying')
+        # exit(1)
+        raise e
+
+    try:
+        simlib.build(src['models'] + src['testbenches'])
+    except Exception as e:
+        print(c.BOLD + c.FAIL + '[#] failed to build models and/or testbenches. dying')
         exit(1)
 
     passed = 0
     for test in tests:
         print(c.HEADER + '[-] running test {}'.format(test.stem) + c.RESET)
         try:
-            simargs = []
-            Simulator(simlib, test.stem).simulate(dump_all=args.dump_all, vcd_all=args.vcd_all)
+            sargs = []
+            do = None
+            if args.vcd_all:
+                do = 'vcd file {}.vcd; vcd add -r sim:/*; '.format(test.stem)
+            if args.coverage:
+                print(c.OKCYAN + '[-] run recording coverage data' + c.RESET)
+
+                sargs += ['-coverage', '-coverstore', str(test_out/'coverstore'), '-testname', test.stem]
+
+            Simulator(simlib, test.stem).simulate(*sargs, do=do)
+
             print(c.BOLD + c.OKGREEN + '[*] test passed' + c.RESET)
             passed += 1
         except VsimAssertionFail as e:
@@ -159,7 +173,16 @@ def test(args):
             print(c.FAIL + '[!] unknown vsim return code {}'.format(e.statuscode) + c.RESET)
 
     print(c.OKBLUE + '-'*32 + c.RESET)
-    print(c.OKBLUE + '[&] {}/{} tests passed'.format(passed, len(tests)))
+    print(c.OKBLUE + '[&] {}/{} tests passed'.format(passed, len(tests))
+        + (' (' + c.OKCYAN + 'recorded coverage data' + c.OKBLUE + ')' if args.coverage else '') + c.RESET)
+
+def cover(args):
+    subprocess.run([TOOLS['vcover'], 'merge', '-out', str(test_out/'cover.ucdb'), str(test_out/'coverstore')], cwd=str(test_out), check=True)
+    subprocess.run([TOOLS['vcover'], 'report',
+            '-html',
+            '-out', str(test_out/'coverage-report'),
+            str(test_out/'cover.ucdb')],
+        cwd=str(test_out), check=True)
 
 def synth(args):
     ensure_build_dirs()
@@ -181,16 +204,21 @@ def main():
     parser = argparse.ArgumentParser(description='build system for ece551 final project')
     # parser.add_argument('command', metavar='COMMAND')
     subparsers = parser.add_subparsers(title='subcommands',
-                                       description='tasks')
+                                       description='tasks',
+                                       dest='command')
+    subparsers.required = True
 
     parser_tests = subparsers.add_parser('test')
     parser_tests.add_argument('test', nargs='*')
-    parser_tests.add_argument('--dump-all', action='store_true')
-    parser_tests.add_argument('--vcd-all', action='store_true')
+    parser_tests.add_argument('--vcd-all', action='store_true', help='dump all signals to a VCD file in the test builddir')
+    parser_tests.add_argument('--coverage', action='store_true', help='collect coverage data')
     parser_tests.set_defaults(func=test)
 
     parser_synth = subparsers.add_parser('synth')
     parser_synth.set_defaults(func=synth)
+
+    parser_cover = subparsers.add_parser('cover')
+    parser_cover.set_defaults(func=cover)
 
     parser_clean = subparsers.add_parser('clean')
     parser_clean.set_defaults(func=clean)
