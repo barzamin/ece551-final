@@ -65,6 +65,7 @@ module RemoteComm(clk, rst_n, RX, TX, cmd, data, send_cmd, cmd_sent, resp_rdy, r
     select = 2'b00;
     trmt = 1'b0;
     done = 1'b0;
+    next_state = IDLE;
     case(state)
       IDLE: begin
         if(send_cmd) begin
@@ -74,6 +75,7 @@ module RemoteComm(clk, rst_n, RX, TX, cmd, data, send_cmd, cmd_sent, resp_rdy, r
         end
       end
       SEND_HIGH: begin
+        next_state = SEND_HIGH;
         if(tx_done) begin // Cmd field was sent
           select = 2'b01;
           trmt = 1'b1;
@@ -81,6 +83,7 @@ module RemoteComm(clk, rst_n, RX, TX, cmd, data, send_cmd, cmd_sent, resp_rdy, r
         end
       end
       SEND_LOW: begin
+        next_state = SEND_LOW;
         if(tx_done) begin // High data was sent
           select = 2'b10;
           trmt = 1'b1;
@@ -88,6 +91,7 @@ module RemoteComm(clk, rst_n, RX, TX, cmd, data, send_cmd, cmd_sent, resp_rdy, r
         end
       end
       WAITING: begin
+        next_state = WAITING;
         if(tx_done) begin // Low data was sent, we're done.
           next_state = IDLE;
           done = 1'b1;
