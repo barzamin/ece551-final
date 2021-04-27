@@ -37,7 +37,7 @@ module QuadCopter(
   wire [7:0] resp;      // response to wireless
   wire send_resp;       // asserted to send response to wireless
   wire resp_sent;       // indicates response to wireless has been sent
-  
+
   wire vld;                  // goes high one clock cycle when new inertial measurement
   wire signed [15:0] ptch;   // current pitch
   wire signed [15:0] roll;   // current roll
@@ -52,7 +52,7 @@ module QuadCopter(
   wire inertial_cal; // indicates calibration in progress to flght_control
   wire motors_off;   // to flight control, forces motors off
   wire cal_done;     // from inertial_intf to cmd_cfg
-  
+
   wire [10:0] frnt_spd; // front motor speed from flght_cntrl
   wire [10:0] bck_spd;  // front motor speed from flght_cntrl
   wire [10:0] lft_spd;  // front motor speed from flght_cntrl

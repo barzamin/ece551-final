@@ -27,7 +27,7 @@ initial begin
   TB.await_response();
 
   // Set the thrust to a low value.
-  TB.remote_send(TB.SET_THRST, 16'h0005);
+  TB.remote_send(TB.SET_THRST, 16'h005A);
   TB.await_response();
 
   // Set the yaw to a new value and time how long it takes to converge.
@@ -37,13 +37,18 @@ initial begin
   TB.convergence_check(TB.SET_YAW, 16'h00AA);
   slow_converge_time = $realtime - start_time;
 
-  // Zero out the yaw.
-  TB.remote_send(TB.SET_YAW, 16'h0);
+  // Reset everything
+  @(negedge TB.clk);
+  TB.RST_n = 1'b0;
+  @(negedge TB.clk);
+  TB.RST_n = 1'b1;
+
+  // Calibrate the copter again.
+  TB.remote_send(TB.CALIBRATE, 16'h0);
   TB.await_response();
-  TB.convergence_check(TB.SET_YAW, 16'h0);
 
   // Significantly increase thrust.
-  TB.remote_send(TB.SET_THRST, 16'h0050);
+  TB.remote_send(TB.SET_THRST, 16'h00AA);
   TB.await_response();
 
   // Set the yaw to the same previous value and measure convergence time.
@@ -52,6 +57,7 @@ initial begin
   start_time = $realtime;
   TB.convergence_check(TB.SET_YAW, 16'h00AA);
   fast_converge_time = $realtime - start_time;
+
   assert(fast_converge_time < slow_converge_time)
   else $fatal(1, "[!] took longer to converge with more thrust. fast_converge_time = %d, slow_converge_time = %d", fast_converge_time, slow_converge_time);
   $finish();
