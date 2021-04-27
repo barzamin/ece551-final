@@ -1,4 +1,7 @@
 quietly set BreakOnAssertion 2
+quietly onfinish final
+
+quietly lassign [context du] workpath tbname
 
 onbreak {
   lassign [runStatus -full] status fullstat
@@ -24,6 +27,8 @@ onbreak {
 }
 
 run -all
+
+coverage save -testname "$tbname" "coveragedbs/$tbname.ucdb"
 
 if {$broken == 1} {
   # Unexpected condition.  Exit with bad status.
