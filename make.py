@@ -112,7 +112,7 @@ class Simulator:
 def ensure_build_dirs():
     builddir.mkdir(exist_ok=True)
     test_out.mkdir(exist_ok=True)
-    (test_out/'coveragedbs').mkdir(exist_ok=True)
+    (test_out/'coverdbs').mkdir(exist_ok=True)
     synth_out.mkdir(exist_ok=True)
     (synth_out/'reports').mkdir(exist_ok=True)
 
@@ -181,10 +181,11 @@ def cover(args):
     subprocess.run([TOOLS['vcover'], 'merge',
             '-totals',
             '-out', str(test_out/'cover.ucdb'),
-            str(test_out/'coverstore')],
+            *list(map(str, (test_out/'coverdbs').glob('*.ucdb')))],
         cwd=str(test_out), check=True)
     subprocess.run([TOOLS['vcover'], 'report',
             '-html',
+            '-details', '-annotate', '-codeAll',
             '-out', str(test_out/'coverage-report'),
             str(test_out/'cover.ucdb')],
         cwd=str(test_out), check=True)

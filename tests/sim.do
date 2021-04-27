@@ -29,7 +29,7 @@ onbreak {
 
 run -all
 
-coverage save -testname "$tbname" "coveragedbs/$tbname.ucdb"
+coverage save -testname "$tbname" "coverdbs/$tbname.ucdb"
 
 if {$broken == 1} {
   # Unexpected condition.  Exit with bad status.
