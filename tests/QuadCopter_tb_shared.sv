@@ -1,6 +1,6 @@
 `default_nettype none
 /*------------------------------------------------------------------------------
---  A shared testbench that can be used by other testbenches to test 
+--  A shared testbench that can be used by other testbenches to test
 --  the design of QuadCopter.sv.
 --
 --  Team: MEI
@@ -101,7 +101,7 @@ RemoteComm iREMOTE(
   .clr_resp_rdy(clr_resp_rdy)
 );
 
-// If the desired pitch/roll/yaw are within CONVERGENCE_MARGIN of 
+// If the desired pitch/roll/yaw are within CONVERGENCE_MARGIN of
 // the actual value these go high
 assign ptch_converge = (abs(iDUT.ptch - data) < CONVERGENCE_MARGIN) ? 1'b1 : 1'b0;
 assign roll_converge = (abs(iDUT.roll - data) < CONVERGENCE_MARGIN) ? 1'b1 : 1'b0;

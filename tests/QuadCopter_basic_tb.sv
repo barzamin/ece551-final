@@ -22,7 +22,7 @@ initial begin
   // CALIBRATE
   TB.remote_send(TB.CALIBRATE, 16'h0);
   TB.await_response();
-  
+
   // THRUST
   TB.remote_send(TB.SET_THRST, 16'h00AA);
   TB.await_response();

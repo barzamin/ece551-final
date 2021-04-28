@@ -20,7 +20,9 @@ module flght_cntrl_chk_nq_tb();
   integer stim_file, resp_file;
 
   // DUT instantiation
-  flght_cntrl_pipeline iDUT(.clk(clk), .rst_n(rst_n), .vld(vld), .inertial_cal(inertial_cal),
+  // NOTE we don't use pipelined version since that won't pass timing-exact tests
+  //      due to end-to-end pipeline delay; this is more for math validation.
+  flght_cntrl iDUT(.clk(clk), .rst_n(rst_n), .vld(vld), .inertial_cal(inertial_cal),
             .d_ptch(d_ptch), .d_roll(d_roll), .d_yaw(d_yaw), .ptch(ptch),
             .roll(roll), .yaw(yaw), .thrst(thrst), .frnt_spd(frnt_spd),
             .bck_spd(bck_spd), .lft_spd(lft_spd), .rght_spd(rght_spd));

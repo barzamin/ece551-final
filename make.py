@@ -43,11 +43,14 @@ TOOLS = {
     'vcover': str(QUESTA_BIN / 'vcover'),
     'design_vision': '/cae/apps/bin/design_vision', # this CAE spoofscript properly loads licensing and process libraries
 }
+SAED32_LIB = '/filespace/e/ece551/SAED32_lib'
 
 src = {
     'rtl': list(srcdir.glob('*.sv')),
     'models': list((srcdir/'models').glob('*.sv')),
-    'testbenches': list(testdir.glob('*.sv'))
+    'testbenches': list(testdir.glob('*.sv')),
+
+    'postsynth_tbs': list((testdir/'postsynth').glob('*.sv')),
 }
 
 
@@ -123,8 +126,16 @@ def test(args):
     for p in testdir.glob('*.hex'):
         shutil.copy(str(p), str(test_out))
 
+    # copy SAED32_lib if rquired
+    if args.postsynth:
+        if not (test_out/'SAED32_lib').is_dir():
+            shutil.copytree(SAED32_LIB, str(test_out/'SAED32_lib'))
+
     if args.test == []:
-        tests = [p for p in src['testbenches'] if p.stem.endswith('_tb')]
+        if args.postsynth:
+            tests = src['postsynth_tbs']
+        else:
+            tests = [p for p in src['testbenches'] if p.stem.endswith('_tb')]
     else:
         tests = [testdir / '{}.sv'.format(t) for t in args.test]
 
@@ -134,13 +145,23 @@ def test(args):
         if args.coverage:
             print(c.OKCYAN + '[-] building DUT with coverage enabled' + c.RESET)
             bargs += ['+cover=bcestf', '-coveropt', '3']
-        simlib.build(src['rtl'], *bargs)
+
+        if args.postsynth:
+            # use SAED32 default timescale on everything
+            bargs += ['-timescale', '1ns/1ps']
+            # nb: we still build in RTL so that models can use UART, reset_synch
+            simlib.build([synth_out/'QuadCopter.vg'] + src['rtl'], *bargs)
+        else:
+            simlib.build(src['rtl'], *bargs)
     except Exception as e:
         print(c.BOLD + c.FAIL + '[#] failed to build DUT RTL. dying')
         exit(1)
 
     try:
-        simlib.build(src['models'] + src['testbenches'])
+        if args.postsynth:
+            simlib.build(src['models'] + src['postsynth_tbs'], '-timescale', '1ns/1ps')
+        else:
+            simlib.build(src['models'] + src['testbenches'])
     except Exception as e:
         print(c.BOLD + c.FAIL + '[#] failed to build models and/or testbenches. dying')
         exit(1)
@@ -158,6 +179,13 @@ def test(args):
                 print(c.OKCYAN + '[-] run recording coverage data' + c.RESET)
 
                 sargs += ['-coverage']
+
+            if args.postsynth:
+                sargs += [
+                    '-t', 'ns',
+                    '+notimingchecks',
+                    '-L', 'SAED32_lib'
+                ]
 
             Simulator(simlib, test.stem).simulate(*sargs, do=do)
             bad = False
@@ -224,6 +252,7 @@ def main():
     parser_tests.add_argument('test', nargs='*')
     parser_tests.add_argument('--vcd-all', action='store_true', help='dump all signals to a VCD file in the test builddir')
     parser_tests.add_argument('--coverage', action='store_true', help='collect coverage data')
+    parser_tests.add_argument('-p', '--postsynth', action='store_true', help='run postsynth tests')
     parser_tests.set_defaults(func=test)
 
     parser_synth = subparsers.add_parser('synth')
