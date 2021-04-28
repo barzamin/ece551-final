@@ -149,20 +149,24 @@ def test(args):
         if args.postsynth:
             # use SAED32 default timescale on everything
             bargs += ['-timescale', '1ns/1ps']
-            # nb: we still build in RTL so that models can use UART, reset_synch
-            simlib.build([synth_out/'QuadCopter.vg'] + src['rtl'], *bargs)
+            simlib.build(
+                [synth_out/'QuadCopter.vg'],
+                *bargs)
         else:
             simlib.build(src['rtl'], *bargs)
-    except Exception as e:
+    except subprocess.CalledProcessError as e:
         print(c.BOLD + c.FAIL + '[#] failed to build DUT RTL. dying')
         exit(1)
 
     try:
         if args.postsynth:
-            simlib.build(src['models'] + src['postsynth_tbs'], '-timescale', '1ns/1ps')
+            simlib.build(src['models'] \
+                + src['postsynth_tbs'] \
+                + [str(srcdir/x) for x in ['reset_synch.sv', 'UART_rcv.sv', 'UART_tx.sv', 'UART.sv']], # some rtl models need,
+                '-timescale', '1ns/1ps')
         else:
             simlib.build(src['models'] + src['testbenches'])
-    except Exception as e:
+    except subprocess.CalledProcessError as e:
         print(c.BOLD + c.FAIL + '[#] failed to build models and/or testbenches. dying')
         exit(1)
 
