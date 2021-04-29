@@ -32,12 +32,31 @@ initial begin
   TB.await_response();
 
   assert(TB.iDUT.motors_off === 1'b1)
-  else $fatal(1, "motors_off is not asserted after a MOTORS_OFF command.");
+  else $fatal(1,"[!] motors_off was not high after motors off cmd");
 
+  // Calibrate.
   TB.remote_send(TB.CALIBRATE, 16'h0);
+  TB.await_response();
+
+  // Check that calibration worked.
+  repeat(1000) @(posedge TB.clk);
+  assert(TB.iDUT.motors_off === 1'b0)
+  else $fatal(1,"[!] motors_off was not low after calibrate cmd");
+
+  // Set the yaw.
+  TB.remote_send(TB.SET_YAW, 16'h0050);
+  TB.await_response();
+
+  // Perform a reset.
+  @(negedge TB.clk);
+  TB.RST_n = 1'b0;
+  @(negedge TB.clk);
+  TB.RST_n = 1'b1;
+  
+  // 
+  assert(TB.iDUT.motors_off === 1'b1)
+  else $fatal(1,"[!] motors_off was not high after reset");
 
   $finish();
 end
-
-
 endmodule
