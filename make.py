@@ -3,6 +3,7 @@
 import os
 import shutil
 import argparse
+import itertools
 import subprocess
 from pathlib import Path
 from collections import namedtuple
@@ -228,6 +229,8 @@ def cover(args):
             str(test_out/'cover.ucdb')],
         cwd=str(test_out), check=True)
 
+    subprocess.run("find ./ -type f -exec sed -i -e 's~{}~...~g' {{}} \;".format(str(Path.home())), shell=True, cwd=str(test_out/'coverage-report'))
+
 def synth(args):
     ensure_build_dirs()
     with open(str(basedir / 'synth' / 'synthesize.dc')) as f:
@@ -243,6 +246,24 @@ def synth(args):
 
 def clean(args):
     shutil.rmtree(str(builddir), ignore_errors=True)
+
+def build_submission(args):
+    # clean(None)
+    ensure_build_dirs()
+    sd = (builddir/'submission')
+    sd.mkdir(exist_ok=True)
+
+    # synth(None)
+    shutil.copy(str(synth_out/'reports'/'area.txt'), str(sd/'area-report.txt'))
+    with open(str(basedir / 'synth' / 'synthesize.dc')) as f:
+        template = Template(f.read())
+
+    buildscript = str(sd/'synthesize.dc')
+    with open(buildscript, 'w') as f:
+        f.write(template.render(sources=[x.name for x in src['rtl']]))
+
+    for t in list(testdir.glob('*.sv')) + list((testdir/'postsynth').glob('*.sv')) + src['rtl'] + src['models']:
+        shutil.copy(str(t), str(sd))
 
 def main():
     parser = argparse.ArgumentParser(description='build system for ece551 final project')
@@ -267,6 +288,9 @@ def main():
 
     parser_clean = subparsers.add_parser('clean')
     parser_clean.set_defaults(func=clean)
+
+    parser_buildsubmission = subparsers.add_parser('build-submission')
+    parser_buildsubmission.set_defaults(func=build_submission)
 
     args = parser.parse_args()
     args.func(args)
