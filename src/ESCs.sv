@@ -1,3 +1,14 @@
+/*------------------------------------------------------------------------------
+--  This module controls the ESC_interface for each motor. It also ensures 
+--  the proper output when the motors_off signal from cmd_cnfg is asserted.
+--
+--  Team: MEI
+--  Authors:
+--    * Mitchell Kitzinger
+--    * Erin Marshall
+--    * Isaac Colbert
+--  Term: Spring 2021
+------------------------------------------------------------------------------*/
 module ESCs (
   input wire clk, rst_n,
 

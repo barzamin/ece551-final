@@ -1,4 +1,15 @@
 `default_nettype none
+/*------------------------------------------------------------------------------
+--  This module receives 24-bit packets and transmits 8-bit packets using
+--  the UART serial interface.
+--
+--  Team: MEI
+--  Authors:
+--    * Mitchell Kitzinger
+--    * Erin Marshall
+--    * Isaac Colbert
+--  Term: Spring 2021
+------------------------------------------------------------------------------*/
 module UART_comm (
   input wire logic clk, rst_n,  // clock and active low reset
   input wire logic RX,          // serial data input

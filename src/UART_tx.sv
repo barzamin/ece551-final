@@ -1,3 +1,13 @@
+/*------------------------------------------------------------------------------
+--  This module acts as the transmitter for the UART interface.
+--
+--  Team: MEI
+--  Authors:
+--    * Mitchell Kitzinger
+--    * Erin Marshall
+--    * Isaac Colbert
+--  Term: Spring 2021
+------------------------------------------------------------------------------*/
 module UART_tx (
   input logic clk,
   input logic rst_n,         // async reset active low

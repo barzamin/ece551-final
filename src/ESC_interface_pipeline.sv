@@ -1,3 +1,14 @@
+/*------------------------------------------------------------------------------
+--  This module produces a PWM pulse that is used to control the motors of 
+--  the Quadcopter.
+--
+--  Team: MEI
+--  Authors:
+--    * Mitchell Kitzinger
+--    * Erin Marshall
+--    * Isaac Colbert
+--  Term: Spring 2021
+------------------------------------------------------------------------------*/
 module ESC_interface_pipeline (
   input wire clk,          // clock
   input wire rst_n,        // asynchronous reset active low

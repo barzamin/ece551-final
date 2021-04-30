@@ -1,3 +1,15 @@
+/*------------------------------------------------------------------------------
+--  This module controls the commands of the Quadcopter. It interprets the 
+--  input command from UART_comm and interfaces with flght_cntrl as well as 
+--  ESCs to control the Quadcopter.
+--
+--  Team: MEI
+--  Authors:
+--    * Mitchell Kitzinger
+--    * Erin Marshall
+--    * Isaac Colbert
+--  Term: Spring 2021
+------------------------------------------------------------------------------*/
 module cmd_cfg
 #(parameter FAST_SIM = 1)
 (

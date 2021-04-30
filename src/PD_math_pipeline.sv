@@ -1,3 +1,14 @@
+/*------------------------------------------------------------------------------
+--  This module performs the computations used to control the flight of the 
+--  Quadcopter.
+--
+--  Team: MEI
+--  Authors:
+--    * Mitchell Kitzinger
+--    * Erin Marshall
+--    * Isaac Colbert
+--  Term: Spring 2021
+------------------------------------------------------------------------------*/
 module PD_math_pipeline (
   input wire clk,            // clock
   input wire rst_n,          // reset (active low)
@@ -19,10 +30,10 @@ module PD_math_pipeline (
 
   // type logic for pipeline reg
   logic [6:0] D_diff_sat_ff;
-  //logic signed [10:0] dterm_ff;
   logic signed [9:0] pterm_ff;
   logic [9:0] err_sat_ff;
 
+  // genvar variable for derivative queue
   genvar i;
 
   assign err = {actual[15],actual} - {desired[15],desired};

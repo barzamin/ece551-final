@@ -1,3 +1,13 @@
+/*------------------------------------------------------------------------------
+--  This module acts as the receiver for the UART interface.
+--
+--  Team: MEI
+--  Authors:
+--    * Mitchell Kitzinger
+--    * Erin Marshall
+--    * Isaac Colbert
+--  Term: Spring 2021
+------------------------------------------------------------------------------*/
 module UART_rcv (
   input logic clk,
   input logic rst_n,   // async reset active low

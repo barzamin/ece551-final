@@ -1,4 +1,15 @@
 `default_nettype none
+/*------------------------------------------------------------------------------
+--  This module implements the SPI serial interface. It is to be used to 
+--  communicate with the inertial sensor of the Quadcopter.
+--
+--  Team: MEI
+--  Authors:
+--    * Mitchell Kitzinger
+--    * Erin Marshall
+--    * Isaac Colbert
+--  Term: Spring 2021
+------------------------------------------------------------------------------*/
 module SPI_mnrch (
   input wire logic clk,    // clock
   input wire logic rst_n,  // async reset [active low]

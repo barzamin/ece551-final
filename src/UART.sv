@@ -1,3 +1,13 @@
+/*------------------------------------------------------------------------------
+--  This module is a wrapper for the UART serial interface.
+--
+--  Team: MEI
+--  Authors:
+--    * Mitchell Kitzinger
+--    * Erin Marshall
+--    * Isaac Colbert
+--  Term: Spring 2021
+------------------------------------------------------------------------------*/
 module UART(
   input wire clk,rst_n,          // clock and active low reset
   input wire RX,trmt,            // strt_tx tells TX section to transmit tx_data
