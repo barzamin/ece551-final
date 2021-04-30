@@ -1,3 +1,14 @@
+/*------------------------------------------------------------------------------
+--  This module synchronizes and detects a rising edge in the
+--  push button signal.
+--
+--  Team: MEI
+--  Authors:
+--    * Mitchell Kitzinger
+--    * Erin Marshall
+--    * Isaac Colbert
+--  Term: Spring 2021
+------------------------------------------------------------------------------*/
 module PB_release (
   input logic PB,        // pushbutton input
   input logic rst_n,     // reset (active low, asynch)

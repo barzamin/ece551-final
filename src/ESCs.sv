@@ -7,9 +7,8 @@ module ESCs (
   input wire [10:0] rght_spd, // speed of right motor from PD_math
 
   input wire motors_off, // signal to turn off motors from cmd_cnfg
-  input wire wrt,        // wrt signal for ESC_interfaces from ?????
-                         // vld from inert_intf?
-                         // wouldn't vld start the pulse with different data
+  input wire wrt,        // wrt signal for ESC_interfaces from vld
+                         // from inert_intf
 
   output wire frnt, // PWM pulse sent to front motor
   output wire bck,  // PWM pulse sent to back motor
