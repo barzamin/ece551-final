@@ -53,7 +53,7 @@ initial begin
   @(negedge TB.clk);
   TB.RST_n = 1'b1;
   
-  // 
+  // Check that reset forced motors_off to be high.
   assert(TB.iDUT.motors_off === 1'b1)
   else $fatal(1,"[!] motors_off was not high after reset");
 
